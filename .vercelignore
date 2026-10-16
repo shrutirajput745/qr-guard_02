@@ -1,9 +1,6 @@
 # Tests and test utilities
 tests/
 
-# Build scripts
-scripts/
-
 # Documentation and Media
 docs/
 screenshots/
