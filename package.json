@@ -1,0 +1,28 @@
+{
+  "name": "qr-guide-2",
+  "version": "2.0.0",
+  "description": "QR Guide 2 - Intelligent QR Code Scanner & URL Security Analyzer",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "node scripts/build.js",
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node tests/run-all-tests.js"
+  },
+  "keywords": [
+    "qr-code",
+    "scanner",
+    "security",
+    "url-analyzer",
+    "phishing-detector",
+    "vercel"
+  ],
+  "author": "QR Guide Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

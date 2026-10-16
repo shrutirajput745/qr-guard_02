@@ -1,0 +1,106 @@
+name: CI/CD Pipeline - QR Guide 2
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  # 1. Automated Test Suite (Matrix Testing on Node 18, 20, 22)
+  test:
+    name: Test (Node ${{ matrix.node-version }} on ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Automated Test Suite
+        run: npm test
+
+  # 2. Production Build Verification
+  build:
+    name: Production Build Verification
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Production Build Script
+        run: npm run build
+
+      - name: Verify Distribution Files Exist
+        run: |
+          test -f public/index.html || exit 1
+          test -f public/css/style.css || exit 1
+          test -f public/js/analyzer.js || exit 1
+          test -f api/analyze.js || exit 1
+          test -f api/health.js || exit 1
+          test -f vercel.json || exit 1
+          echo "All distribution and serverless assets verified successfully."
+
+  # 3. Vercel Deployment & Readiness
+  deploy-vercel:
+    name: Vercel Deployment Check
+    needs: [test, build]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Validate Vercel Configuration
+        run: |
+          node -e "
+            const fs = require('fs');
+            const v = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
+            if (!v.rewrites || !v.headers) throw new Error('Invalid vercel.json configuration');
+            console.log('✔ vercel.json configuration validated for production deployment');
+          "
+
+      - name: Deploy to Vercel (When Secrets are Configured)
+        if: env.VERCEL_TOKEN != ''
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npx -y vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+          npx -y vercel build --prod --token=$VERCEL_TOKEN
+          npx -y vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN

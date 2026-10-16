@@ -5,6 +5,17 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  // --- HTML Entity Escaping Helper (Prevents XSS) ---
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   // --- Toast Notification Helper ---
   window.showToast = function(message, type = 'info') {
     const container = document.getElementById('toastContainer');
@@ -14,14 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
     toast.className = `toast toast-${type}`;
     
     let icon = 'fa-circle-info';
-    if (type === 'success') icon = 'fa-circle-check';
-    if (type === 'warning') icon = 'fa-triangle-exclamation';
-    if (type === 'error') icon = 'fa-circle-exclamation';
+    if (type === 'success' || type === 'safe') icon = 'fa-circle-check';
+    if (type === 'warning' || type === 'suspicious') icon = 'fa-triangle-exclamation';
+    if (type === 'error' || type === 'dangerous') icon = 'fa-circle-exclamation';
 
+    const safeMsg = escapeHtml(message);
     toast.innerHTML = `
       <i class="fa-solid ${icon}"></i>
-      <span>${message}</span>
-      <button onclick="this.parentElement.remove()" class="toast-close">&times;</button>
+      <span>${safeMsg}</span>
+      <button onclick="this.parentElement.remove()" class="toast-close" aria-label="Close Notification">&times;</button>
     `;
 
     container.appendChild(toast);
@@ -94,18 +106,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Initialize Modules ---
-  window.QRScanner.init(
-    (decodedText) => {
-      processQrData(decodedText);
-    },
-    (errorMessage) => {
-      window.showToast(errorMessage, 'warning');
-    }
-  );
+  if (window.QRScanner) {
+    window.QRScanner.init(
+      (decodedText) => {
+        processQrData(decodedText);
+      },
+      (errorMessage) => {
+        window.showToast(errorMessage, 'warning');
+      }
+    );
+  }
 
-  window.QRSamples.init((sampleUrl) => {
-    processQrData(sampleUrl);
-  });
+  if (window.QRSamples) {
+    window.QRSamples.init((sampleUrl) => {
+      processQrData(sampleUrl);
+    });
+  }
 
   // Remove File Button
   const removeFileBtn = document.getElementById('removeFileBtn');
@@ -134,7 +150,42 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
         }, 2000);
+      }).catch(() => {
+        window.showToast('Could not copy to clipboard automatically.', 'warning');
       });
+    });
+  }
+
+  // Open URL Safety Handling
+  const openUrlBtn = document.getElementById('openUrlBtn');
+  let currentAnalyzedUrl = '';
+  let currentAnalyzedStatus = 'Safe';
+
+  if (openUrlBtn) {
+    openUrlBtn.addEventListener('click', (e) => {
+      if (!currentAnalyzedUrl || currentAnalyzedUrl === '#') {
+        e.preventDefault();
+        window.showToast('No valid web address to open.', 'warning');
+        return;
+      }
+
+      // Block dangerous schemes from running
+      if (/^(javascript:|data:|file:|vbscript:)/i.test(currentAnalyzedUrl)) {
+        e.preventDefault();
+        window.showToast('Direct execution of script or file schemes is blocked for security.', 'error');
+        return;
+      }
+
+      // If marked dangerous, confirm with user
+      if (currentAnalyzedStatus === 'Dangerous') {
+        const confirmed = window.confirm(
+          'SECURITY ALERT: QR Guide 2 flagged this URL as HIGH RISK / DANGEROUS.\n\nOpening it may expose you to phishing, credential theft, or malicious downloads.\n\nAre you absolutely sure you want to proceed?'
+        );
+        if (!confirmed) {
+          e.preventDefault();
+          return;
+        }
+      }
     });
   }
 
@@ -143,9 +194,13 @@ document.addEventListener('DOMContentLoaded', () => {
     showLoading();
 
     setTimeout(() => {
+      if (!window.QRAnalyzer) {
+        window.showToast('Analyzer module not loaded properly.', 'error');
+        return;
+      }
       const result = window.QRAnalyzer.analyze(rawPayload);
       renderResults(result);
-    }, 450);
+    }, 350);
   }
 
   // --- Render Security Results to UI ---
@@ -169,6 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
     statusBanner.className = 'status-banner';
     meterBarFill.className = 'meter-bar-fill';
 
+    currentAnalyzedStatus = result.status;
+
     if (result.status === 'Dangerous') {
       statusBanner.classList.add('status-dangerous');
       statusIcon.className = 'fa-solid fa-skull-crossbones';
@@ -187,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Animate Score Counter
-    animateCounter(scoreValue, 0, result.score, 700);
+    animateCounter(scoreValue, 0, result.score, 600);
 
     // Update Risk Bar Position
     setTimeout(() => {
@@ -198,17 +255,39 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Extracted Payload Code Block
     const extractedPayload = document.getElementById('extractedPayload');
     const payloadType = document.getElementById('payloadType');
-    const openUrlBtn = document.getElementById('openUrlBtn');
 
     extractedPayload.textContent = result.input;
 
-    if (result.isUrl) {
+    if (result.isUrl && !/^(javascript:|data:|file:|vbscript:)/i.test(result.input)) {
       payloadType.innerHTML = '<i class="fa-solid fa-link"></i> Decoded Web URL';
       openUrlBtn.style.display = 'inline-flex';
-      openUrlBtn.href = result.input.startsWith('http') ? result.input : `http://${result.input}`;
+
+      const validUrl = result.input.startsWith('http://') || result.input.startsWith('https://') 
+        ? result.input 
+        : `http://${result.input}`;
+      
+      currentAnalyzedUrl = validUrl;
+      openUrlBtn.href = validUrl;
+
+      if (result.status === 'Dangerous') {
+        openUrlBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Open with Caution (High Risk)';
+        openUrlBtn.className = 'btn btn-danger btn-lg';
+      } else if (result.status === 'Suspicious') {
+        openUrlBtn.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square"></i> Open Link (Suspicious)';
+        openUrlBtn.className = 'btn btn-outline btn-lg';
+      } else {
+        openUrlBtn.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square"></i> Open Link Safely';
+        openUrlBtn.className = 'btn btn-outline btn-lg';
+      }
     } else {
-      payloadType.innerHTML = '<i class="fa-solid fa-font"></i> Decoded Text Data';
+      currentAnalyzedUrl = '';
+      if (/^(javascript:|data:|file:|vbscript:)/i.test(result.input)) {
+        payloadType.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Executable / Script Payload (Blocked)';
+      } else {
+        payloadType.innerHTML = '<i class="fa-solid fa-font"></i> Decoded Text / Config Data';
+      }
       openUrlBtn.style.display = 'none';
+      openUrlBtn.href = '#';
     }
 
     // 3. Score Explanation Summary
@@ -217,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
       explanationText.textContent = result.explanation;
     }
 
-    // 4. Detected Issues List with Point Badges
+    // 4. Detected Issues List with Point Badges (XSS-safe)
     const issuesList = document.getElementById('issuesList');
     issuesList.innerHTML = '';
 
@@ -233,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       result.issues.forEach(issue => {
         const item = document.createElement('div');
-        item.className = `issue-item ${issue.severity}`;
+        item.className = `issue-item ${escapeHtml(issue.severity)}`;
         
         let icon = 'fa-solid fa-triangle-exclamation';
         if (issue.severity === 'high') icon = 'fa-solid fa-circle-exclamation';
@@ -243,17 +322,17 @@ document.addEventListener('DOMContentLoaded', () => {
           <i class="${icon}"></i>
           <div>
             <div class="issue-header-line">
-              <strong>[${issue.title}]</strong>
-              <span class="pts-badge">+${issue.points} pts</span>
+              <strong>[${escapeHtml(issue.title)}]</strong>
+              <span class="pts-badge">+${escapeHtml(issue.points)} pts</span>
             </div>
-            <p>${issue.message}</p>
+            <p>${escapeHtml(issue.message)}</p>
           </div>
         `;
         issuesList.appendChild(item);
       });
     }
 
-    // 5. Passed Security Indicators
+    // 5. Passed Security Indicators (XSS-safe)
     const highlightsList = document.getElementById('highlightsList');
     highlightsList.innerHTML = '';
 
@@ -273,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         item.innerHTML = `
           <i class="fa-solid fa-circle-check"></i>
           <div>
-            <strong>[${h.title}]</strong> ${h.message}
+            <strong>[${escapeHtml(h.title)}]</strong> ${escapeHtml(h.message)}
           </div>
         `;
         highlightsList.appendChild(item);
@@ -321,14 +400,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('resultContent').style.display = 'none';
     
-    window.QRScanner.resetUpload();
-    window.QRScanner.stopCamera();
+    if (window.QRScanner) {
+      window.QRScanner.resetUpload();
+      window.QRScanner.stopCamera();
+    }
 
     document.getElementById('inputCard').scrollIntoView({ behavior: 'smooth' });
     window.showToast('Ready for next scan.', 'info');
   }
 
   function animateCounter(element, start, end, duration) {
+    if (!element) return;
     let startTimestamp = null;
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp;
