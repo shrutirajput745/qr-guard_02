@@ -120,7 +120,7 @@ async function runApiTests() {
 
     // Test 5: GET / (Frontend Static HTML Serving)
     const staticRes = await makeRequest({ path: '/', method: 'GET' });
-    if (staticRes.statusCode === 200 && typeof staticRes.body === 'string' && staticRes.body.includes('QR Guide')) {
+    if (staticRes.statusCode === 200 && typeof staticRes.body === 'string' && (staticRes.body.includes('QR Guard') || staticRes.body.includes('QR Guide'))) {
       passed++;
       console.log('  ✔ [PASS] GET / serves index.html with 200 OK');
     } else {

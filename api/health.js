@@ -8,8 +8,8 @@ module.exports = (req, res) => {
   res.status(200).json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    service: 'QR Guide 2 - Security Engine',
+    service: 'QR Guard - Security Engine',
     environment: process.env.VERCEL ? 'vercel-production' : 'node-environment',
-    version: '2.0.0'
+    version: '1.0.0'
   });
 };

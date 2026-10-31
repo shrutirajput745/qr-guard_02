@@ -23,7 +23,7 @@ app.get('*', (req, res) => {
 // Start server if run directly
 if (require.main === module) {
   const server = app.listen(PORT, () => {
-    console.log(`🚀 QR Guide 2 running at http://localhost:${PORT}`);
+    console.log(`🚀 QR Guard running at http://localhost:${PORT}`);
   });
 
   process.on('SIGTERM', () => {

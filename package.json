@@ -1,7 +1,7 @@
 {
-  "name": "qr-guide-2",
+  "name": "qr-guard",
   "version": "2.0.0",
-  "description": "QR Guide 2 - Intelligent QR Code Scanner & URL Security Analyzer",
+  "description": "QR Guard - Intelligent QR Code Scanner & URL Security Analyzer",
   "main": "server.js",
   "engines": {
     "node": ">=18.0.0"
@@ -20,9 +20,12 @@
     "phishing-detector",
     "vercel"
   ],
-  "author": "QR Guide Team",
+  "author": "QR Guard Team",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "jsqr": "^1.4.0",
+    "pptxgenjs": "^4.0.1",
+    "qrcode": "^1.5.4"
   }
 }

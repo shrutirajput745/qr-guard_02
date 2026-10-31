@@ -6,11 +6,15 @@ console.log('   QR GUIDE 2 - COMPLETE AUTOMATION TEST SUITE       ');
 console.log('=====================================================\n');
 
 try {
-  console.log('▶ [1/2] Running Heuristic Analyzer Unit Tests...');
+  console.log('▶ [1/3] Running Heuristic Analyzer Unit Tests...');
   const unitTestPath = path.join(__dirname, 'unit-tests.js');
   execSync(`node "${unitTestPath}"`, { stdio: 'inherit' });
 
-  console.log('▶ [2/2] Running Backend API & Server Integration Tests...');
+  console.log('\n▶ [2/3] Running QR Blur Recovery & Demo Tests...');
+  const recoveryTestPath = path.join(__dirname, 'recovery-tests.js');
+  execSync(`node "${recoveryTestPath}"`, { stdio: 'inherit' });
+
+  console.log('\n▶ [3/3] Running Backend API & Server Integration Tests...');
   const apiTestPath = path.join(__dirname, 'api-tests.js');
   execSync(`node "${apiTestPath}"`, { stdio: 'inherit' });
 

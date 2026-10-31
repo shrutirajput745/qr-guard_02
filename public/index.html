@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QR Guide 2 - Transparent QR Security & Risk Scoring System</title>
-  
+  <title>QR Guard — Universal QR Security Scanner &amp; Analyzer</title>
+  <meta name="description" content="QR Guard: Scan any QR code, analyze security risks, recover blurry QR codes, and protect yourself from quishing attacks.">
+
   <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
+
   <!-- CSS -->
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -19,539 +20,1578 @@
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="toast-container"></div>
 
+  <!-- Hidden decoder element required by html5-qrcode recovery -->
+  <div id="__recovery_reader__" style="display:none"></div>
+
   <!-- App Wrapper -->
   <div class="app-container">
-    
-    <!-- Header / Navbar -->
+
+    <!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
     <header class="app-header">
       <div class="header-brand">
         <div class="logo-icon">
-          <i class="fa-solid fa-shield-cat"></i>
+          <i class="fa-solid fa-shield-halved"></i>
         </div>
         <div class="brand-text">
-          <h1>QR Guide <span>2</span></h1>
-          <p class="subtitle">Transparent Heuristic Security Analysis System</p>
+          <h1>QR <span>Guard</span></h1>
+          <p class="subtitle">Scan Smart. Think Safe. · Intelligent QR Security Analyzer</p>
         </div>
       </div>
       <div class="header-badges">
-        <span class="version-badge"><i class="fa-solid fa-scale-balanced"></i> Heuristic Scoring</span>
+        <span class="version-badge"><i class="fa-solid fa-shield-halved"></i> Active</span>
         <button id="themeToggleBtn" class="icon-btn" title="Toggle Theme">
           <i class="fa-solid fa-moon"></i>
         </button>
       </div>
     </header>
 
-    <!-- Stats / Security Overview Banner -->
+    <!-- ═══════════════════════ PAGE NAVIGATION ══════════════════════════════ -->
+    <nav class="page-nav" role="navigation" aria-label="Main sections">
+      <button class="page-nav-btn active" data-page="scanner" id="navScanner">
+        <i class="fa-solid fa-qrcode"></i> Universal Scanner
+      </button>
+      <button class="page-nav-btn" data-page="recovery" id="navRecovery">
+        <i class="fa-solid fa-flask"></i> Blur Recovery Lab <span style="font-size:0.65rem; background:rgba(245, 158, 11, 0.2); color:#f59e0b; padding:2px 6px; border-radius:4px; margin-left:4px;">Experimental</span>
+      </button>
+      <button class="page-nav-btn" data-page="history" id="navHistory">
+        <i class="fa-solid fa-clock-rotate-left"></i> Scan History
+      </button>
+      <button class="page-nav-btn" data-page="demo" id="navDemo">
+        <i class="fa-solid fa-flask"></i> Live Demo Lab
+      </button>
+      <button class="page-nav-btn" data-page="architecture" id="navArchitecture">
+        <i class="fa-solid fa-sitemap"></i> System Architecture
+      </button>
+      <button class="page-nav-btn" data-page="presentation" id="navPresentation">
+        <i class="fa-solid fa-chalkboard-user"></i> Project Presentation
+      </button>
+    </nav>
+
+    <!-- ═══════════════════════ STATS BANNER ════════════════════════════════ -->
     <section class="stats-banner">
       <div class="stat-item">
-        <i class="fa-solid fa-calculator"></i>
+        <i class="fa-solid fa-list-check"></i>
         <div>
-          <span class="stat-value">Transparent Math</span>
-          <span class="stat-label">Itemized Point Scoring</span>
+          <span class="stat-value">Universal</span>
+          <span class="stat-label">QR Type Detection</span>
         </div>
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
-        <i class="fa-solid fa-list-check"></i>
+        <i class="fa-solid fa-shield-virus"></i>
         <div>
-          <span class="stat-value">9 Indicators</span>
+          <span class="stat-value">10 Indicators</span>
           <span class="stat-label">Security Checks</span>
+        </div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <div>
+          <span class="stat-value">6 Techniques</span>
+          <span class="stat-label">Blur Recovery Methods</span>
         </div>
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
         <i class="fa-solid fa-gauge-high"></i>
         <div>
-          <span class="stat-value">0 – 100 Risk</span>
+          <span class="stat-value">0–100 Risk</span>
           <span class="stat-label">Safe / Suspicious / Dangerous</span>
         </div>
       </div>
-      <div class="stat-divider"></div>
-      <div class="stat-item">
-        <i class="fa-solid fa-graduation-cap"></i>
-        <div>
-          <span class="stat-value">v2.0 Prototype</span>
-          <span class="stat-label">Educational Security Tool</span>
-        </div>
-      </div>
     </section>
 
-    <!-- Main Interactive Grid -->
-    <main class="app-main">
+    <!-- ══════════════════════ PAGE: UNIVERSAL SCANNER ══════════════════════ -->
+    <div class="page-content active" id="page-scanner">
 
-      <!-- Left / Input Section (Tabs) -->
-      <section class="card input-card" id="inputCard">
-        
-        <div class="tab-buttons">
-          <button class="tab-btn active" data-tab="camera">
-            <i class="fa-solid fa-camera"></i> Live Scanner
-          </button>
-          <button class="tab-btn" data-tab="upload">
-            <i class="fa-solid fa-file-arrow-up"></i> Upload Image
-          </button>
-          <button class="tab-btn" data-tab="samples">
-            <i class="fa-solid fa-vial"></i> Demo Samples
-          </button>
-          <button class="tab-btn" data-tab="generate">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> Generator
-          </button>
-        </div>
-
-        <!-- Tab 1: Live Camera Scanner -->
-        <div class="tab-content active" id="tab-camera">
-          <div class="scanner-container">
-            <div id="reader"></div>
-            <div class="scanner-overlay" id="scannerOverlay">
-              <div class="scan-frame"></div>
-              <p class="scan-hint"><i class="fa-solid fa-circle-notch fa-spin"></i> Position QR code inside box</p>
-            </div>
+      <!-- QR Guard Hero Banner -->
+      <section class="scanner-hero-banner" style="margin-bottom: 24px; padding: 26px 28px; border-radius: var(--radius-lg); background: linear-gradient(135deg, rgba(16, 26, 46, 0.96), rgba(11, 20, 36, 0.96)); border: 1px solid var(--border-color); position: relative; overflow: hidden;">
+        <div style="max-width: 820px; position: relative; z-index: 2;">
+          <div style="display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 20px; background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.25); color: var(--accent-blue); font-size: 0.78rem; font-weight: 700; margin-bottom: 12px;">
+            <i class="fa-solid fa-shield-halved"></i> CLIENT-SIDE QUISHING DEFENSE SYSTEM
           </div>
-          <div class="camera-controls">
-            <button id="startCamBtn" class="btn btn-primary"><i class="fa-solid fa-play"></i> Start Camera Scan</button>
-            <button id="stopCamBtn" class="btn btn-secondary" style="display: none;"><i class="fa-solid fa-stop"></i> Stop Camera</button>
-          </div>
-        </div>
-
-        <!-- Tab 2: Upload File -->
-        <div class="tab-content" id="tab-upload">
-          <div class="drop-zone" id="dropZone">
-            <div class="drop-zone-icon">
-              <i class="fa-solid fa-cloud-arrow-up"></i>
-            </div>
-            <h3>Drag & Drop QR Image Here</h3>
-            <p>Supports PNG, JPG, JPEG, WEBP image formats</p>
-            <div class="drop-zone-divider"><span>OR</span></div>
-            <label class="btn btn-primary file-label">
-              <i class="fa-solid fa-folder-open"></i> Browse Image File
-              <input type="file" id="fileInput" accept="image/*" hidden>
-            </label>
-          </div>
-
-          <div id="uploadPreview" class="upload-preview" style="display: none;">
-            <img id="previewImg" src="" alt="QR Preview">
-            <p id="uploadFileName">filename.png</p>
-            
-            <!-- Error Alert Box -->
-            <div id="uploadErrorBox" class="upload-error-box" style="display: none;"></div>
-
-            <button id="removeFileBtn" class="btn btn-sm btn-secondary">
-              <i class="fa-solid fa-rotate-left"></i> Select Another Image
+          <h2 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px; letter-spacing: -0.5px;">
+            QR Guard &mdash; <span style="color: var(--accent-blue);">Scan Smart. Think Safe.</span>
+          </h2>
+          <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 18px;">
+            Inspect any QR code before you navigate. QR Guard decodes visual matrices, categorizes payload contents, and executes 9 itemized heuristic security checks to detect quishing attempts and suspicious URLs directly inside your browser with complete privacy.
+          </p>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="document.querySelector('.tab-btn[data-tab=\'camera\']').click(); document.getElementById('startCamBtn').click();">
+              <i class="fa-solid fa-camera"></i> Start Live Camera Scan
+            </button>
+            <button class="btn btn-outline" onclick="document.querySelector('.tab-btn[data-tab=\'upload\']').click(); document.getElementById('fileInput').click();">
+              <i class="fa-solid fa-file-arrow-up"></i> Upload QR Image
+            </button>
+            <button class="btn btn-secondary" onclick="window.navigateToPage('architecture')">
+              <i class="fa-solid fa-sitemap"></i> View Architecture Flow
+            </button>
+            <button class="btn btn-outline" onclick="window.navigateToPage('presentation')">
+              <i class="fa-solid fa-chalkboard-user"></i> 9-Slide Presentation
             </button>
           </div>
         </div>
-
-        <!-- Tab 3: Demo Samples -->
-        <div class="tab-content" id="tab-samples">
-          <div class="demo-info-banner">
-            <i class="fa-solid fa-circle-info"></i>
-            <span>Click any demo sample below to see how points are calculated for Safe, Suspicious, and Dangerous URLs.</span>
-          </div>
-
-          <div class="sample-cards-grid">
-            
-            <!-- Safe Sample 1 -->
-            <div class="sample-card safe-sample">
-              <div class="sample-badge safe"><i class="fa-solid fa-check-circle"></i> Safe (Score 0)</div>
-              <h4>Official Wikipedia</h4>
-              <p class="sample-url">https://wikipedia.org</p>
-              <span class="sample-desc">HTTPS protocol, clean domain reputation</span>
-              <button class="btn btn-sm btn-safe test-sample-btn" data-url="https://wikipedia.org">
-                <i class="fa-solid fa-magnifying-glass"></i> Scan Safe QR
-              </button>
-            </div>
-
-            <!-- Suspicious Sample 1 -->
-            <div class="sample-card suspicious-sample">
-              <div class="sample-badge suspicious"><i class="fa-solid fa-triangle-exclamation"></i> Suspicious (Score 35)</div>
-              <h4>Link Shortener & HTTP</h4>
-              <p class="sample-url">http://bit.ly/security-test-381</p>
-              <span class="sample-desc">+20 HTTP, +15 Shortener domain</span>
-              <button class="btn btn-sm btn-suspicious test-sample-btn" data-url="http://bit.ly/security-test-381">
-                <i class="fa-solid fa-magnifying-glass"></i> Scan Shortener
-              </button>
-            </div>
-
-            <!-- Suspicious Sample 2 -->
-            <div class="sample-card dangerous-sample">
-              <div class="sample-badge dangerous"><i class="fa-solid fa-skull-crossbones"></i> Dangerous (Score 75)</div>
-              <h4>High-Risk .TOP Domain Phishing</h4>
-              <p class="sample-url">http://free-reward-claim.top/login</p>
-              <span class="sample-desc">+20 HTTP, +25 .TOP TLD, +30 Reward/Login</span>
-              <button class="btn btn-sm btn-dangerous test-sample-btn" data-url="http://free-reward-claim.top/login">
-                <i class="fa-solid fa-magnifying-glass"></i> Scan Phishing TLD
-              </button>
-            </div>
-
-            <!-- Dangerous Sample 1 -->
-            <div class="sample-card dangerous-sample">
-              <div class="sample-badge dangerous"><i class="fa-solid fa-skull-crossbones"></i> Dangerous (Score 85)</div>
-              <h4>Raw IP Host Phishing</h4>
-              <p class="sample-url">http://192.168.1.150/login.php</p>
-              <span class="sample-desc">+20 HTTP, +35 IP Host, +30 Login</span>
-              <button class="btn btn-sm btn-dangerous test-sample-btn" data-url="http://192.168.1.150/login.php">
-                <i class="fa-solid fa-magnifying-glass"></i> Scan IP Host
-              </button>
-            </div>
-
-            <!-- Dangerous Sample 2 -->
-            <div class="sample-card dangerous-sample">
-              <div class="sample-badge dangerous"><i class="fa-solid fa-skull-crossbones"></i> Dangerous (Score 100)</div>
-              <h4>Brand Impersonation & '@' Trick</h4>
-              <p class="sample-url">http://192.168.1.50/paypal.com/verify-account@login.php</p>
-              <span class="sample-desc">+20 HTTP, +35 IP, +40 `@` sign, +30 Brand</span>
-              <button class="btn btn-sm btn-dangerous test-sample-btn" data-url="http://192.168.1.50/paypal.com/verify-account@login.php">
-                <i class="fa-solid fa-magnifying-glass"></i> Scan Impersonation URL
-              </button>
-            </div>
-
-            <!-- Text Payload Sample -->
-            <div class="sample-card text-sample">
-              <div class="sample-badge info"><i class="fa-solid fa-wifi"></i> Non-URL Payload</div>
-              <h4>Wi-Fi Credentials</h4>
-              <p class="sample-url">WIFI:S:CampusWiFi;T:WPA;P:Secured123;;</p>
-              <span class="sample-desc">Standard Wi-Fi network configuration</span>
-              <button class="btn btn-sm btn-secondary test-sample-btn" data-url="WIFI:S:CampusWiFi;T:WPA;P:Secured123;;">
-                <i class="fa-solid fa-magnifying-glass"></i> Scan Wi-Fi QR
-              </button>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- Tab 4: Generator -->
-        <div class="tab-content" id="tab-generate">
-          <div class="generator-box">
-            <h3><i class="fa-solid fa-qrcode"></i> Generate Custom QR & Analyze</h3>
-            <p>Type any web address or text to generate a QR code and evaluate its risk instantly.</p>
-            <div class="input-group">
-              <input type="text" id="genInput" placeholder="Enter URL or text (e.g. https://example.com)" value="https://github.com">
-              <button id="genBtn" class="btn btn-primary"><i class="fa-solid fa-gear"></i> Generate & Scan</button>
-            </div>
-            <div id="genOutput" class="gen-output" style="display: none;">
-              <canvas id="qrCanvas"></canvas>
-            </div>
-          </div>
-        </div>
-
       </section>
 
-      <!-- Right / Result Section -->
-      <section class="card result-card" id="resultCard">
-        
-        <!-- Empty State -->
-        <div id="emptyState" class="empty-state">
-          <div class="empty-icon">
-            <i class="fa-solid fa-shield-halved"></i>
-          </div>
-          <h3>Ready for QR Security Analysis</h3>
-          <p>Scan a QR code using your camera, upload an image file, or click a <strong>Demo Sample</strong> to generate an itemized risk breakdown.</p>
-        </div>
+      <main class="app-main">
 
-        <!-- Loading State -->
-        <div id="loadingState" class="loading-state" style="display: none;">
-          <div class="spinner"></div>
-          <p class="loading-title">Evaluating Heuristic Indicators...</p>
-          <span class="loading-sub">Calculating transparent risk score across 9 security rules</span>
-        </div>
+        <!-- Left / Input Section (Tabs) -->
+        <section class="card input-card" id="inputCard">
 
-        <!-- Results View -->
-        <div id="resultContent" class="result-content" style="display: none;">
-          
-          <!-- Status Banner Header -->
-          <div id="statusBanner" class="status-banner status-safe">
-            <div class="banner-icon">
-              <i id="statusIcon" class="fa-solid fa-circle-check"></i>
-            </div>
-            <div class="banner-info">
-              <span class="status-label">SECURITY VERDICT</span>
-              <h2 id="statusTitle">SAFE TO ACCESS</h2>
-            </div>
-            
-            <div class="score-badge-box">
-              <span class="score-num" id="scoreValue">0</span>
-              <span class="score-max">/100 RISK</span>
-            </div>
-          </div>
-
-          <!-- Risk Meter Bar -->
-          <div class="meter-section">
-            <div class="meter-labels">
-              <span><i class="fa-solid fa-circle-check text-safe"></i> Safe (0–29)</span>
-              <span><i class="fa-solid fa-triangle-exclamation text-suspicious"></i> Suspicious (30–69)</span>
-              <span><i class="fa-solid fa-skull-crossbones text-dangerous"></i> Dangerous (70–100)</span>
-            </div>
-            <div class="meter-bar-track">
-              <div id="meterBarFill" class="meter-bar-fill fill-safe" style="width: 0%;"></div>
-              <div id="meterPointer" class="meter-pointer" style="left: 0%;"></div>
-            </div>
-          </div>
-
-          <!-- Decoded Payload Box -->
-          <div class="payload-box">
-            <div class="payload-header">
-              <span class="payload-type" id="payloadType"><i class="fa-solid fa-link"></i> Extracted Web URL</span>
-              <button id="copyBtn" class="copy-btn" title="Copy to clipboard">
-                <i class="fa-regular fa-copy"></i> Copy
-              </button>
-            </div>
-            <div class="payload-text-wrapper">
-              <code id="extractedPayload">https://wikipedia.org</code>
-            </div>
-          </div>
-
-          <!-- Score Explanation Box -->
-          <div class="explanation-card">
-            <h4><i class="fa-solid fa-chart-pie"></i> Risk Score Explanation</h4>
-            <p id="explanationText" class="explanation-text">Score of 0/100 assigned because no suspicious security indicators were detected.</p>
-          </div>
-
-          <!-- Breakdown Grid -->
-          <div class="breakdown-grid">
-            
-            <!-- Detected Issues & Risk Points -->
-            <div class="breakdown-card">
-              <h4><i class="fa-solid fa-triangle-exclamation"></i> Detected Issues & Risk Points</h4>
-              <div id="issuesList" class="issues-list">
-                <!-- Injected via JS -->
-              </div>
-            </div>
-
-            <!-- Passed Security Checks -->
-            <div class="breakdown-card">
-              <h4><i class="fa-solid fa-shield-check"></i> Passed Security Factors</h4>
-              <div id="highlightsList" class="highlights-list">
-                <!-- Injected via JS -->
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Safety Recommendation Box -->
-          <div id="adviceBox" class="advice-box advice-safe">
-            <i id="adviceIcon" class="fa-solid fa-lightbulb"></i>
-            <div>
-              <strong>Safety Recommendation:</strong>
-              <p id="adviceText">This URL matches standard secure web conventions. Verify domain credentials before entering private data.</p>
-            </div>
-          </div>
-
-          <!-- Prototype Disclaimer Box -->
-          <div class="disclaimer-box">
-            <i class="fa-solid fa-circle-info"></i>
-            <span><strong>System Disclaimer:</strong> This prototype provides heuristic risk scoring for educational evaluation. No automated scanner can guarantee 100% URL safety. Always exercise personal caution when following unknown QR links.</span>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="result-actions">
-            <button id="scanAgainBtn" class="btn btn-primary btn-lg">
-              <i class="fa-solid fa-rotate-left"></i> Scan Again
+          <div class="tab-buttons">
+            <button class="tab-btn active" data-tab="camera">
+              <i class="fa-solid fa-camera"></i> Live Scan
             </button>
-            <a id="openUrlBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-lg">
-              <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Link Safely
-            </a>
+            <button class="tab-btn" data-tab="upload">
+              <i class="fa-solid fa-file-arrow-up"></i> Upload
+            </button>
+            <button class="tab-btn" data-tab="samples">
+              <i class="fa-solid fa-vial"></i> Samples
+            </button>
+            <button class="tab-btn" data-tab="generate">
+              <i class="fa-solid fa-qrcode"></i> Generator
+            </button>
           </div>
 
+          <!-- Tab 1: Live Camera Scanner -->
+          <div class="tab-content active" id="tab-camera">
+            <div class="scanner-container">
+              <div id="reader"></div>
+              <div class="scanner-overlay" id="scannerOverlay">
+                <div class="scan-frame"></div>
+                <p class="scan-hint"><i class="fa-solid fa-circle-notch fa-spin"></i> Position QR code inside box</p>
+              </div>
+            </div>
+            <div class="camera-controls">
+              <button id="startCamBtn" class="btn btn-primary"><i class="fa-solid fa-play"></i> Start Camera Scan</button>
+              <button id="stopCamBtn" class="btn btn-secondary" style="display: none;"><i class="fa-solid fa-stop"></i> Stop Camera</button>
+            </div>
+          </div>
+
+          <!-- Tab 2: Upload File -->
+          <div class="tab-content" id="tab-upload">
+            <div class="drop-zone" id="dropZone">
+              <div class="drop-zone-icon">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+              </div>
+              <h3>Drag &amp; Drop QR Image Here</h3>
+              <p>Supports PNG, JPG, JPEG, WEBP — up to 8MB</p>
+              <div class="drop-zone-divider"><span>OR</span></div>
+              <label class="btn btn-primary file-label">
+                <i class="fa-solid fa-folder-open"></i> Browse Image File
+                <input type="file" id="fileInput" accept="image/*" hidden>
+              </label>
+            </div>
+
+            <div id="uploadPreview" class="upload-preview" style="display: none;">
+              <img id="previewImg" src="" alt="QR Preview">
+              <p id="uploadFileName">filename.png</p>
+
+              <!-- Error Alert Box -->
+              <div id="uploadErrorBox" class="upload-error-box" style="display: none;"></div>
+
+              <button id="removeFileBtn" class="btn btn-sm btn-secondary">
+                <i class="fa-solid fa-rotate-left"></i> Select Another Image
+              </button>
+              <button id="enhanceScanBtn" class="btn btn-primary btn-sm" style="display:none;">Enhance & Scan</button>
+            </div>
+          </div>
+
+          <!-- Tab 3: Demo Samples -->
+          <div class="tab-content" id="tab-samples">
+            <div class="demo-info-banner">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Click any sample to see how QR Guard classifies type and calculates risk.</span>
+            </div>
+
+            <div class="sample-cards-grid">
+
+              <!-- Safe: Wikipedia -->
+              <div class="sample-card safe-sample">
+                <div class="sample-badge safe"><i class="fa-solid fa-check-circle"></i> Safe (0)</div>
+                <h4><i class="fa-solid fa-globe"></i> Wikipedia URL</h4>
+                <p class="sample-url">https://wikipedia.org</p>
+                <span class="sample-desc">HTTPS, clean domain, Website URL type</span>
+                <button class="btn btn-sm btn-safe test-sample-btn" data-url="https://wikipedia.org">
+                  <i class="fa-solid fa-magnifying-glass"></i> Scan
+                </button>
+              </div>
+
+              <!-- Safe: UPI Payment -->
+              <div class="sample-card safe-sample">
+                <div class="sample-badge safe"><i class="fa-solid fa-check-circle"></i> Safe (10)</div>
+                <h4><i class="fa-solid fa-indian-rupee-sign"></i> UPI Payment QR</h4>
+                <p class="sample-url">upi://pay?pa=merchant@upi&pn=Example Shop&am=50&tn=Order123&cu=INR</p>
+                <span class="sample-desc">UPI payment with payee details</span>
+                <button class="btn btn-sm btn-safe test-sample-btn" data-url="upi://pay?pa=merchant@upi&pn=Example Shop&am=50&tn=Order123&cu=INR">
+                  <i class="fa-solid fa-magnifying-glass"></i> Scan
+                </button>
+              </div>
+
+              <!-- Safe: Wi-Fi -->
+              <div class="sample-card safe-sample">
+                <div class="sample-badge safe"><i class="fa-solid fa-wifi"></i> Safe (10)</div>
+                <h4><i class="fa-solid fa-wifi"></i> Wi-Fi Network</h4>
+                <p class="sample-url">WIFI:S:CampusWiFi;T:WPA;P:Secured123;;</p>
+                <span class="sample-desc">Wi-Fi credentials (password masked)</span>
+                <button class="btn btn-sm btn-safe test-sample-btn" data-url="WIFI:S:CampusWiFi;T:WPA;P:Secured123;;">
+                  <i class="fa-solid fa-magnifying-glass"></i> Scan
+                </button>
+              </div>
+
+              <!-- Safe: vCard -->
+              <div class="sample-card safe-sample">
+                <div class="sample-badge safe"><i class="fa-solid fa-address-card"></i> Safe (0)</div>
+                <h4><i class="fa-solid fa-address-card"></i> Contact vCard</h4>
+                <p class="sample-url">BEGIN:VCARD\nFN:Jane Doe\nTEL:+91-9876543210\nEMAIL:jane@example.com\nORG:TechCorp\nEND:VCARD</p>
+                <span class="sample-desc">Contact card (vCard format)</span>
+                <button class="btn btn-sm btn-safe test-sample-btn" data-url="BEGIN:VCARD&#10;FN:Jane Doe&#10;TEL:+91-9876543210&#10;EMAIL:jane@example.com&#10;ORG:TechCorp&#10;END:VCARD">
+                  <i class="fa-solid fa-magnifying-glass"></i> Scan
+                </button>
+              </div>
+
+              <!-- Safe: Phone -->
+              <div class="sample-card safe-sample">
+                <div class="sample-badge safe"><i class="fa-solid fa-phone"></i> Safe (10)</div>
+                <h4><i class="fa-solid fa-phone"></i> Phone Number</h4>
+                <p class="sample-url">tel:+18005550199</p>
+                <span class="sample-desc">Direct phone call link</span>
+                <button class="btn btn-sm btn-safe test-sample-btn" data-url="tel:+18005550199">
+                  <i class="fa-solid fa-magnifying-glass"></i> Scan
+                </button>
+              </div>
+
+              <!-- Safe: Email -->
+              <div class="sample-card safe-sample">
+                <div class="sample-badge safe"><i class="fa-solid fa-envelope"></i> Safe (10)</div>
+                <h4><i class="fa-solid fa-envelope"></i> Email Address</h4>
+                <p class="sample-url">mailto:support@example.com?subject=Help</p>
+                <span class="sample-desc">Pre-filled email action</span>
+                <button class="btn btn-sm btn-safe test-sample-btn" data-url="mailto:support@example.com?subject=Help">
+                  <i class="fa-solid fa-magnifying-glass"></i> Scan
+                </button>
+              </div>
+
+              <!-- Safe: Social -->
+              <div class="sample-card safe-sample">
+                <div class="sample-badge safe"><i class="fa-brands fa-instagram"></i> Safe (0)</div>
+                <h4><i class="fa-brands fa-instagram"></i> Instagram Link</h4>
+                <p class="sample-url">https://instagram.com/yourhandle</p>
+                <span class="sample-desc">Social media profile link</span>
+                <button class="btn btn-sm btn-safe test-sample-btn" data-url="https://instagram.com/yourhandle">
+                  <i class="fa-solid fa-magnifying-glass"></i> Scan
+                </button>
+              </div>
+
+              <!-- Suspicious: Shortener -->
+              <div class="sample-card suspicious-sample">
+                <div class="sample-badge suspicious"><i class="fa-solid fa-triangle-exclamation"></i> Suspicious (35)</div>
+                <h4><i class="fa-solid fa-link"></i> Link Shortener</h4>
+                <p class="sample-url">http://bit.ly/security-test-381</p>
+                <span class="sample-desc">+20 HTTP, +15 Shortener service</span>
+                <button class="btn btn-sm btn-suspicious test-sample-btn" data-url="http://bit.ly/security-test-381">
+                  <i class="fa-solid fa-magnifying-glass"></i> Scan
+                </button>
+              </div>
+
+              <!-- Dangerous: Phishing TLD -->
+              <div class="sample-card dangerous-sample">
+                <div class="sample-badge dangerous"><i class="fa-solid fa-skull-crossbones"></i> Dangerous (75)</div>
+                <h4><i class="fa-solid fa-globe"></i> Phishing .TOP Domain</h4>
+                <p class="sample-url">http://free-reward-claim.top/login</p>
+                <span class="sample-desc">+20 HTTP, +25 .TOP TLD, +30 keywords</span>
+                <button class="btn btn-sm btn-dangerous test-sample-btn" data-url="http://free-reward-claim.top/login">
+                  <i class="fa-solid fa-magnifying-glass"></i> Scan
+                </button>
+              </div>
+
+              <!-- Dangerous: Raw IP -->
+              <div class="sample-card dangerous-sample">
+                <div class="sample-badge dangerous"><i class="fa-solid fa-skull-crossbones"></i> Dangerous (85+)</div>
+                <h4><i class="fa-solid fa-network-wired"></i> Raw IP Host</h4>
+                <p class="sample-url">http://192.168.1.150/login.php</p>
+                <span class="sample-desc">+20 HTTP, +35 IP host, +30 keyword</span>
+                <button class="btn btn-sm btn-dangerous test-sample-btn" data-url="http://192.168.1.150/login.php">
+                  <i class="fa-solid fa-magnifying-glass"></i> Scan
+                </button>
+              </div>
+
+              <!-- Dangerous: Brand Impersonation -->
+              <div class="sample-card dangerous-sample">
+                <div class="sample-badge dangerous"><i class="fa-solid fa-skull-crossbones"></i> Dangerous (100)</div>
+                <h4><i class="fa-solid fa-user-secret"></i> Brand Impersonation</h4>
+                <p class="sample-url">http://192.168.1.50/paypal.com/verify-account@login.php</p>
+                <span class="sample-desc">IP + @ trick + PayPal impersonation</span>
+                <button class="btn btn-sm btn-dangerous test-sample-btn" data-url="http://192.168.1.50/paypal.com/verify-account@login.php">
+                  <i class="fa-solid fa-magnifying-glass"></i> Scan
+                </button>
+              </div>
+
+              <!-- Dangerous: App Download Link (Google Play) -->
+              <div class="sample-card safe-sample">
+                <div class="sample-badge safe"><i class="fa-solid fa-mobile-screen-button"></i> Safe (0)</div>
+                <h4><i class="fa-brands fa-google-play"></i> App Download Link</h4>
+                <p class="sample-url">https://play.google.com/store/apps/details?id=com.example.app</p>
+                <span class="sample-desc">Official Google Play Store link</span>
+                <button class="btn btn-sm btn-safe test-sample-btn" data-url="https://play.google.com/store/apps/details?id=com.example.app">
+                  <i class="fa-solid fa-magnifying-glass"></i> Scan
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Tab 4: Generator -->
+          <div class="tab-content" id="tab-generate">
+            <div class="generator-box">
+              <h3><i class="fa-solid fa-qrcode"></i> Generate Custom QR &amp; Analyze</h3>
+              <p>Type any URL, UPI link, Wi-Fi config, or text to generate a QR and analyze it instantly.</p>
+              <div class="input-group">
+                <input type="text" id="genInput" placeholder="Enter URL, upi://, WIFI:, text…" value="https://github.com">
+                <button id="genBtn" class="btn btn-primary"><i class="fa-solid fa-gear"></i> Generate &amp; Scan</button>
+              </div>
+              <div id="genOutput" class="gen-output" style="display: none;">
+                <canvas id="qrCanvas"></canvas>
+              </div>
+            </div>
+          </div>
+
+        </section>
+        <!-- Right / Result Section -->
+        <section class="card result-card" id="resultCard">
+
+          <!-- Empty State -->
+          <div id="emptyState" class="empty-state">
+            <div class="empty-icon">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h3>Ready for QR Security Analysis</h3>
+            <p>Use the Live Scanner, Upload an image, or click a <strong>Demo Sample</strong> to get an instant security report with QR type classification.</p>
+          </div>
+
+          <!-- Loading State -->
+          <div id="loadingState" class="loading-state" style="display: none;">
+            <div class="spinner"></div>
+            <p class="loading-title">Analyzing QR Code…</p>
+            <span class="loading-sub">Classifying type and evaluating 10 security indicators</span>
+          </div>
+
+          <!-- Results View -->
+          <div id="resultContent" class="result-content" style="display: none;">
+
+            <!-- QR Type Classification Badge -->
+            <div id="qrTypeBadge" class="qr-type-badge">
+              <i id="qrTypeIcon" class="fa-solid fa-question-circle"></i>
+              <div>
+                <span class="qr-type-label-text">QR Type</span>
+                <strong id="qrTypeLabelText">Unknown</strong>
+              </div>
+            </div>
+
+            <!-- Parsed Data Panel (shown for special types) -->
+            <div id="parsedDataPanel" class="parsed-data-panel" style="display:none;">
+              <h4><i class="fa-solid fa-table-list"></i> Extracted Information</h4>
+              <div id="parsedDataGrid" class="parsed-data-grid"></div>
+            </div>
+
+            <!-- Status Banner Header -->
+            <div id="statusBanner" class="status-banner status-safe">
+              <div class="banner-icon">
+                <i id="statusIcon" class="fa-solid fa-circle-check"></i>
+              </div>
+              <div class="banner-info">
+                <span class="status-label">SECURITY VERDICT</span>
+                <h2 id="statusTitle">SAFE / LOW RISK</h2>
+              </div>
+
+              <div class="score-badge-box">
+                <span class="score-num" id="scoreValue">0</span>
+                <span class="score-max">/100 RISK</span>
+              </div>
+            </div>
+
+            <!-- Risk Meter Bar -->
+            <div class="meter-section">
+              <div class="meter-labels">
+                <span><i class="fa-solid fa-circle-check text-safe"></i> Safe (0–29)</span>
+                <span><i class="fa-solid fa-triangle-exclamation text-suspicious"></i> Suspicious (30–69)</span>
+                <span><i class="fa-solid fa-skull-crossbones text-dangerous"></i> Dangerous (70–100)</span>
+              </div>
+              <div class="meter-bar-track">
+                <div id="meterBarFill" class="meter-bar-fill fill-safe" style="width: 0%;"></div>
+                <div id="meterPointer" class="meter-pointer" style="left: 0%;"></div>
+              </div>
+            </div>
+
+            <!-- Decoded Payload Box -->
+            <div class="payload-box">
+              <div class="payload-header">
+                <span class="payload-type" id="payloadType"><i class="fa-solid fa-link"></i> Extracted Content</span>
+                <button id="copyBtn" class="copy-btn" title="Copy to clipboard">
+                  <i class="fa-regular fa-copy"></i> Copy
+                </button>
+              </div>
+              <div class="payload-text-wrapper">
+                <code id="extractedPayload">—</code>
+              </div>
+            </div>
+
+            <!-- Score Explanation Box -->
+            <div class="explanation-card">
+              <h4><i class="fa-solid fa-chart-pie"></i> Risk Score Explanation</h4>
+              <p id="explanationText" class="explanation-text">No scan performed yet.</p>
+            </div>
+
+            <!-- Breakdown Grid -->
+            <div class="breakdown-grid">
+
+              <!-- Detected Issues & Risk Points -->
+              <div class="breakdown-card">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Detected Issues &amp; Risk Points</h4>
+                <div id="issuesList" class="issues-list">
+                  <!-- Injected via JS -->
+                </div>
+              </div>
+
+              <!-- Passed Security Checks -->
+              <div class="breakdown-card">
+                <h4><i class="fa-solid fa-shield-check"></i> Passed Security Factors</h4>
+                <div id="highlightsList" class="highlights-list">
+                  <!-- Injected via JS -->
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Safety Recommendation Box -->
+            <div id="adviceBox" class="advice-box advice-safe">
+              <i id="adviceIcon" class="fa-solid fa-lightbulb"></i>
+              <div>
+                <strong>Safety Recommendation:</strong>
+                <p id="adviceText">Verify the destination before proceeding.</p>
+              </div>
+            </div>
+
+            <!-- Prototype Disclaimer Box -->
+            <div class="disclaimer-box">
+              <i class="fa-solid fa-circle-info"></i>
+              <span><strong>Disclaimer:</strong> QR Guard provides heuristic risk scoring for educational evaluation. No automated scanner guarantees 100% safety. Always exercise caution with unknown QR codes.</span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="result-actions">
+              <button id="scanAgainBtn" class="btn btn-primary btn-lg">
+                <i class="fa-solid fa-rotate-left"></i> Scan Again
+              </button>
+              <a id="openUrlBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-lg" style="display:none;">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Link Safely
+              </a>
+            </div>
+
+          </div>
+
+        </section>
+
+      </main>
+
+      <!-- ═══════════════════ HOW IT WORKS (WORKFLOW) ═══════════════════════ -->
+      <section class="info-section" id="howItWorksSection">
+        <div class="section-header">
+          <span class="section-tag"><i class="fa-solid fa-diagram-project"></i> SYSTEM WORKFLOW</span>
+          <h2>How QR Guard Works</h2>
+          <p>A step-by-step overview of how the security engine classifies and analyzes QR codes.</p>
         </div>
 
-      </section>
-
-    </main>
-
-    <!-- SECTION 1: How QR Guide 2 Works (Visual Workflow) -->
-    <section class="info-section" id="howItWorksSection">
-      <div class="section-header">
-        <span class="section-tag"><i class="fa-solid fa-diagram-project"></i> SYSTEM WORKFLOW</span>
-        <h2>How QR Guide 2 Works</h2>
-        <p>A step-by-step overview of how the security engine processes and analyzes QR codes.</p>
-      </div>
-
-      <div class="workflow-steps-grid">
-        
-        <!-- Step 1 -->
-        <div class="workflow-step-card">
-          <div class="step-num">01</div>
-          <div class="step-icon-box">
-            <i class="fa-solid fa-qrcode"></i>
+        <div class="workflow-steps-grid">
+          <div class="workflow-step-card">
+            <div class="step-num">01</div>
+            <div class="step-icon-box"><i class="fa-solid fa-qrcode"></i></div>
+            <h4>Scan or Upload QR</h4>
+            <p>Use live webcam, drag-and-drop an image, or try the Blur Recovery Lab for damaged QR images.</p>
           </div>
-          <h4>1. Scan or Upload QR</h4>
-          <p>Users scan a physical QR code using live webcam video feed or drag-and-drop an image file (PNG, JPG, WEBP).</p>
-        </div>
-
-        <!-- Step 2 -->
-        <div class="workflow-step-card">
-          <div class="step-num">02</div>
-          <div class="step-icon-box">
-            <i class="fa-solid fa-link"></i>
+          <div class="workflow-step-card">
+            <div class="step-num">02</div>
+            <div class="step-icon-box"><i class="fa-solid fa-tags"></i></div>
+            <h4>Classify QR Type</h4>
+            <p>Automatically identifies: URL, UPI Payment, Wi-Fi, vCard, Email, Phone, SMS, Geo, App Link, Social Media, or Plain Text.</p>
           </div>
-          <h4>2. Extract URL or Text</h4>
-          <p>The decoding engine parses matrix barcodes and extracts the underlying web link, Wi-Fi config, or text payload.</p>
-        </div>
-
-        <!-- Step 3 -->
-        <div class="workflow-step-card">
-          <div class="step-num">03</div>
-          <div class="step-icon-box">
-            <i class="fa-solid fa-magnifying-glass-chart"></i>
+          <div class="workflow-step-card">
+            <div class="step-num">03</div>
+            <div class="step-icon-box"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+            <h4>Analyze Security</h4>
+            <p>Evaluates 10 indicators: HTTP, IP hosts, high-risk TLDs, brand impersonation, phishing keywords, shorteners, and more.</p>
           </div>
-          <h4>3. Analyze Security Indicators</h4>
-          <p>Evaluates 9 key indicators including HTTP encryption, IP hostnames, high-risk TLDs, `@` tricks, and phishing keywords.</p>
-        </div>
-
-        <!-- Step 4 -->
-        <div class="workflow-step-card">
-          <div class="step-num">04</div>
-          <div class="step-icon-box">
-            <i class="fa-solid fa-calculator"></i>
+          <div class="workflow-step-card">
+            <div class="step-num">04</div>
+            <div class="step-icon-box"><i class="fa-solid fa-calculator"></i></div>
+            <h4>Calculate Risk Score</h4>
+            <p>Assigns itemized risk points (0–100) with full transparency. Every point is explained.</p>
           </div>
-          <h4>4. Calculate Risk Score</h4>
-          <p>Assigns itemized risk points (0–100) based on detected anomalies for full scoring transparency.</p>
-        </div>
-
-        <!-- Step 5 -->
-        <div class="workflow-step-card">
-          <div class="step-num">05</div>
-          <div class="step-icon-box">
-            <i class="fa-solid fa-shield-cat"></i>
+          <div class="workflow-step-card">
+            <div class="step-num">05</div>
+            <div class="step-icon-box"><i class="fa-solid fa-shield-halved"></i></div>
+            <h4>Display Security Report</h4>
+            <p>Shows verdict (Safe/Suspicious/Dangerous), extracted data, risk factors, and actionable advice.</p>
           </div>
-          <h4>5. Display Security Result</h4>
-          <p>Presents a clear verdict (Safe, Suspicious, or Dangerous) with explanations and actionable safety advice.</p>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- SECTION 2 & 3 Grid: Why QR Security Matters & Key Features -->
-    <div class="dual-info-grid">
-      
-      <!-- Why QR Security Matters -->
-      <section class="card why-security-card">
-        <div class="card-section-title">
-          <i class="fa-solid fa-shield-virus icon-danger"></i>
-          <div>
-            <h3>Why QR Security Matters</h3>
-            <span class="card-subtitle">Understanding Quishing & QR Phishing Risks</span>
-          </div>
-        </div>
-        
-        <p class="why-description">
-          QR codes hide raw URLs behind visual matrix patterns. Attackers exploit this opacity—a threat known as <strong>"Quishing"</strong> (QR Phishing)—to silently redirect users to malicious websites without revealing the destination beforehand.
-        </p>
-
-        <div class="threat-points-list">
-          <div class="threat-item">
-            <i class="fa-solid fa-circle-exclamation text-danger"></i>
-            <div>
-              <strong>Fake Credential Harvesting</strong>
-              <p>Phishers replace legitimate QR stickers on posters or menus with links pointing to fake bank or login pages.</p>
-            </div>
-          </div>
-
-          <div class="threat-item">
-            <i class="fa-solid fa-circle-exclamation text-danger"></i>
-            <div>
-              <strong>Hidden Obfuscation Tricks</strong>
-              <p>Shortened URLs (`bit.ly`) and IP hostnames disguise dangerous server locations from quick glance inspection.</p>
-            </div>
-          </div>
-
-          <div class="threat-item">
-            <i class="fa-solid fa-circle-exclamation text-danger"></i>
-            <div>
-              <strong>Drive-By Malware Downloads</strong>
-              <p>Malicious QR codes can trigger automatic downloads or exploit unencrypted HTTP connections.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Key Features Overview -->
-      <section class="card key-features-card">
-        <div class="card-section-title">
-          <i class="fa-solid fa-star icon-accent"></i>
-          <div>
-            <h3>Key System Features</h3>
-            <span class="card-subtitle">QR Guide 2 Prototype Capabilities</span>
-          </div>
-        </div>
-
-        <div class="features-list-grid">
-          
-          <div class="feature-tile">
-            <i class="fa-solid fa-camera-retro"></i>
-            <div>
-              <strong>QR Scanner / Upload</strong>
-              <p>Webcam video scanning and drag-and-drop image file parser.</p>
-            </div>
-          </div>
-
-          <div class="feature-tile">
-            <i class="fa-solid fa-file-code"></i>
-            <div>
-              <strong>URL & Text Extraction</strong>
-              <p>Decodes web links, plain text data, and Wi-Fi configurations.</p>
-            </div>
-          </div>
-
-          <div class="feature-tile">
-            <i class="fa-solid fa-list-check"></i>
-            <div>
-              <strong>Rule-Based Analysis</strong>
-              <p>Evaluates 9 simple, transparent security indicators.</p>
-            </div>
-          </div>
-
-          <div class="feature-tile">
-            <i class="fa-solid fa-gauge-high"></i>
-            <div>
-              <strong>Risk Score (0–100)</strong>
-              <p>Itemized score math with transparent point breakdown.</p>
-            </div>
-          </div>
-
-          <div class="feature-tile">
-            <i class="fa-solid fa-shield-halved"></i>
-            <div>
-              <strong>3-Tier Status Verdict</strong>
-              <p>Categorizes outcomes into Safe, Suspicious, or Dangerous.</p>
-            </div>
-          </div>
-
-          <div class="feature-tile">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <div>
-              <strong>Detected Issues Breakdown</strong>
-              <p>Displays risk severity badges and explanatory reasons.</p>
-            </div>
-          </div>
-
-          <div class="feature-tile">
-            <i class="fa-solid fa-vial"></i>
-            <div>
-              <strong>Demo QR Testing</strong>
-              <p>Pre-loaded test cases for instant evaluation without a camera.</p>
-            </div>
-          </div>
-
         </div>
       </section>
 
     </div>
+    <!-- end page-scanner -->
 
-    <!-- Footer -->
+    <!-- ══════════════════════ PAGE: BLUR RECOVERY LAB ══════════════════════ -->
+    <div class="page-content" id="page-recovery">
+      <section class="recovery-hero">
+        <div class="recovery-hero-text">
+          <span class="section-tag" style="background:rgba(245, 158, 11, 0.15); color:#f59e0b; border:1px solid rgba(245, 158, 11, 0.3);"><i class="fa-solid fa-flask"></i> EXPERIMENTAL LAB (IN DEVELOPMENT)</span>
+          <h2>Blur Recovery Lab</h2>
+          <p>Experimental image processing research for degraded, noisy, or low-contrast QR images. Please note: This lab is currently under active development and research testing.</p>
+          <div class="recovery-disclaimer" style="border-left: 4px solid var(--accent-orange, #f59e0b);">
+            <i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-orange, #f59e0b);"></i>
+            <div>
+              <strong>Notice:</strong> The Blur Recovery Lab is currently in development and not functional as a reliable feature yet. For live QR scanning and complete threat assessment, please use the <a href="#" onclick="window.navigateToPage('scanner'); return false;" style="color: var(--accent-blue); text-decoration: underline;">Universal Scanner</a>.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ Built-in Demo QR Evaluation Suite (FIX 2) ════════ -->
+      <section class="card demo-presets-card">
+        <div class="demo-presets-header">
+          <div>
+            <span class="section-tag"><i class="fa-solid fa-flask-vial"></i> EVALUATION READY</span>
+            <h3>QR Guard Recovery Lab — Built-in Demos</h3>
+            <p>One-click verification test suite using real locally generated QR codes. Test each degradation scenario and inspect the actual enhancement pipeline output.</p>
+          </div>
+        </div>
+
+        <div class="demo-presets-grid">
+          <!-- Demo 1: Normal QR -->
+          <div class="demo-preset-item">
+            <div class="demo-preset-top">
+              <span class="sample-badge safe"><i class="fa-solid fa-check-circle"></i> Clean QR</span>
+              <h4>1. Normal QR</h4>
+            </div>
+            <div class="demo-preset-thumb-wrap">
+              <img src="images/demo/demo-normal.png" alt="Normal QR Demo" class="demo-preset-thumb">
+            </div>
+            <p class="demo-preset-desc">Pristine contrast. Decodes directly without filtering.</p>
+            <div class="demo-preset-payload">
+              <small>Expected Payload:</small>
+              <code>https://wikipedia.org</code>
+            </div>
+            <div class="demo-preset-actions">
+              <button class="btn btn-sm btn-outline btn-load-demo" data-demo="normal">
+                <i class="fa-solid fa-download"></i> Load Demo
+              </button>
+              <button class="btn btn-sm btn-primary btn-run-demo-recovery" data-demo="normal">
+                <i class="fa-solid fa-play"></i> Run Recovery
+              </button>
+            </div>
+          </div>
+
+          <!-- Demo 2: Low-Contrast QR -->
+          <div class="demo-preset-item">
+            <div class="demo-preset-top">
+              <span class="sample-badge suspicious"><i class="fa-solid fa-adjust"></i> Low Contrast</span>
+              <h4>2. Faint / Low-Contrast</h4>
+            </div>
+            <div class="demo-preset-thumb-wrap">
+              <img src="images/demo/demo-lowcontrast.png" alt="Low Contrast QR Demo" class="demo-preset-thumb">
+            </div>
+            <p class="demo-preset-desc">Faint gray modules. Direct scan fails; restored by contrast stretch.</p>
+            <div class="demo-preset-payload">
+              <small>Expected Payload:</small>
+              <code>WIFI:S:SecureOffice;T:WPA;P:OfficePass2026;;</code>
+            </div>
+            <div class="demo-preset-actions">
+              <button class="btn btn-sm btn-outline btn-load-demo" data-demo="lowcontrast">
+                <i class="fa-solid fa-download"></i> Load Demo
+              </button>
+              <button class="btn btn-sm btn-primary btn-run-demo-recovery" data-demo="lowcontrast">
+                <i class="fa-solid fa-play"></i> Run Recovery
+              </button>
+            </div>
+          </div>
+
+          <!-- Demo 3: Blurry QR -->
+          <div class="demo-preset-item">
+            <div class="demo-preset-top">
+              <span class="sample-badge suspicious"><i class="fa-solid fa-wand-magic-sparkles"></i> Optical Blur</span>
+              <h4>3. Blurry QR</h4>
+            </div>
+            <div class="demo-preset-thumb-wrap">
+              <img src="images/demo/demo-blurry.png" alt="Blurry QR Demo" class="demo-preset-thumb">
+            </div>
+            <p class="demo-preset-desc">Defocus blur with bled edges. Restored by threshold &amp; sharpening.</p>
+            <div class="demo-preset-payload">
+              <small>Expected Payload:</small>
+              <code>https://github.com/shrutirajput745/qr-guard_02</code>
+            </div>
+            <div class="demo-preset-actions">
+              <button class="btn btn-sm btn-outline btn-load-demo" data-demo="blurry">
+                <i class="fa-solid fa-download"></i> Load Demo
+              </button>
+              <button class="btn btn-sm btn-primary btn-run-demo-recovery" data-demo="blurry">
+                <i class="fa-solid fa-play"></i> Run Recovery
+              </button>
+            </div>
+          </div>
+
+          <!-- Demo 4: Severely Damaged QR (Honest Failure) -->
+          <div class="demo-preset-item">
+            <div class="demo-preset-top">
+              <span class="sample-badge dangerous"><i class="fa-solid fa-triangle-exclamation"></i> Damaged (Test)</span>
+              <h4>4. Corrupted QR</h4>
+            </div>
+            <div class="demo-preset-thumb-wrap">
+              <img src="images/demo/demo-corrupted.png" alt="Corrupted QR Demo" class="demo-preset-thumb">
+            </div>
+            <p class="demo-preset-desc">Finder patterns destroyed. Tests honest reporting without fake results.</p>
+            <div class="demo-preset-payload">
+              <small>Expected Result:</small>
+              <code style="color:var(--dangerous-color)">[Honest Recovery Failure]</code>
+            </div>
+            <div class="demo-preset-actions">
+              <button class="btn btn-sm btn-outline btn-load-demo" data-demo="corrupted">
+                <i class="fa-solid fa-download"></i> Load Demo
+              </button>
+              <button class="btn btn-sm btn-primary btn-run-demo-recovery" data-demo="corrupted">
+                <i class="fa-solid fa-play"></i> Run Recovery
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="recovery-layout">
+
+        <!-- Upload Panel -->
+        <div class="card recovery-upload-card">
+          <h3><i class="fa-solid fa-cloud-arrow-up"></i> Upload Damaged QR Image</h3>
+          <p class="recovery-sub">Max 8MB · PNG, JPG, WEBP accepted</p>
+
+          <div class="recovery-error-box" id="recoveryErrorBox" style="display:none;"></div>
+
+          <!-- Expected Payload Box for Demos -->
+          <div id="recoveryExpectedBox" class="recovery-expected-box" style="display:none;">
+            <i class="fa-solid fa-bullseye"></i>
+            <div>
+              <span class="expected-label">Expected Decoded Payload:</span>
+              <code id="recoveryExpectedPayload"></code>
+            </div>
+          </div>
+
+          <div class="drop-zone recovery-drop-zone" id="recoveryDropZone">
+            <div class="drop-zone-icon">
+              <i class="fa-solid fa-image"></i>
+            </div>
+            <h3>Drop QR Image Here</h3>
+            <p>Blurred, noisy, rotated, or low-resolution images</p>
+            <div class="drop-zone-divider"><span>OR</span></div>
+            <label class="btn btn-primary file-label">
+              <i class="fa-solid fa-folder-open"></i> Browse Image File
+              <input type="file" id="recoveryFileInput" accept="image/*" hidden>
+            </label>
+          </div>
+
+          <!-- Quality Badge -->
+          <div id="imageQualityBadge" class="quality-badge" style="display:none;"></div>
+
+          <!-- Recovery Progress -->
+          <div id="recoveryPanel" style="display:none;">
+            <div class="recovery-progress-box">
+              <div class="recovery-progress-header">
+                <span id="recoveryProgressLabel">Starting…</span>
+                <span id="recoveryProgressPct">0%</span>
+              </div>
+              <div class="recovery-progress-track">
+                <div id="recoveryProgressBar" class="recovery-progress-fill" style="width:0%"></div>
+              </div>
+            </div>
+
+            <div class="recovery-preview-row">
+              <div class="recovery-preview-col">
+                <h5>Original Image</h5>
+                <img id="recoveryOrigPreview" src="" alt="Original QR" class="recovery-preview-img">
+              </div>
+              <div class="recovery-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+              <div class="recovery-preview-col">
+                <h5>Enhanced Image</h5>
+                <img id="recoveryProcessedPreview" src="" alt="Enhanced QR" class="recovery-preview-img" style="display:none;">
+                <div id="recoveryProcessedPlaceholder" class="recovery-placeholder"><i class="fa-solid fa-hourglass-half"></i></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recovery Result -->
+          <div id="recoveryResultPanel" style="display:none;">
+            <div id="recoveryStatus" class="recovery-status"></div>
+            <div id="recoveryMethod" class="recovery-method-label"></div>
+            <div id="recoveryDecodedWrapper" class="recovery-decoded-wrapper">
+              <label>Decoded Content:</label>
+              <code id="recoveryDecodedContent"></code>
+            </div>
+            <div class="recovery-actions">
+              <button id="recoveryResetBtn" class="btn btn-secondary">
+                <i class="fa-solid fa-rotate-left"></i> Try Another Image
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Techniques Info Card -->
+        <div class="card recovery-techniques-card">
+          <h3><i class="fa-solid fa-flask"></i> Enhancement Techniques</h3>
+          <p class="recovery-techniques-sub">Applied sequentially until a QR code is successfully decoded.</p>
+          <div class="techniques-list">
+            <div class="technique-item">
+              <div class="technique-num">1</div>
+              <div>
+                <strong>Original Decode</strong>
+                <p>Direct decode attempt without any processing.</p>
+              </div>
+            </div>
+            <div class="technique-item">
+              <div class="technique-num">2</div>
+              <div>
+                <strong>Grayscale Conversion</strong>
+                <p>Converts color image to grayscale to reduce noise interference.</p>
+              </div>
+            </div>
+            <div class="technique-item">
+              <div class="technique-num">3</div>
+              <div>
+                <strong>Contrast Enhancement</strong>
+                <p>Stretches the histogram to maximize pixel value range.</p>
+              </div>
+            </div>
+            <div class="technique-item">
+              <div class="technique-num">4</div>
+              <div>
+                <strong>Sharpening Filter</strong>
+                <p>Applies a convolution kernel to enhance edges and fine details.</p>
+              </div>
+            </div>
+            <div class="technique-item">
+              <div class="technique-num">5</div>
+              <div>
+                <strong>Adaptive Threshold (Otsu)</strong>
+                <p>Binarizes the image into black and white using optimal threshold.</p>
+              </div>
+            </div>
+            <div class="technique-item">
+              <div class="technique-num">6</div>
+              <div>
+                <strong>Rotation Correction</strong>
+                <p>Tries 90°, 180°, and 270° rotations on the binarized image.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="recovery-limitation-box">
+            <i class="fa-solid fa-circle-info"></i>
+            <p><strong>Limitation:</strong> Recovery works best on slightly degraded images. Severely damaged, extremely low-resolution (&lt;50px), or partially cropped QR codes cannot be reliably recovered.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- end page-recovery -->
+
+    <!-- ══════════════════════ PAGE: SCAN HISTORY ══════════════════════════ -->
+    <div class="page-content" id="page-history">
+      <div class="history-header-row">
+        <div>
+          <h2><i class="fa-solid fa-clock-rotate-left"></i> Scan History</h2>
+          <p id="historyScanCount" class="history-count">No scans yet</p>
+        </div>
+        <div class="history-actions-row">
+          <button id="exportCsvBtn" class="btn btn-outline">
+            <i class="fa-solid fa-file-csv"></i> Export CSV
+          </button>
+          <button id="clearHistoryBtn" class="btn btn-secondary">
+            <i class="fa-solid fa-trash"></i> Clear History
+          </button>
+        </div>
+      </div>
+
+      <div class="history-privacy-note">
+        <i class="fa-solid fa-lock"></i>
+        <span>History is stored locally in your browser only. Wi-Fi passwords, UPI amounts, and contact details are masked before storage.</span>
+      </div>
+
+      <div id="historyEmpty" class="history-empty" style="display:flex;">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <h3>No Scan History Yet</h3>
+        <p>Start scanning QR codes with the Universal Scanner and your results will appear here.</p>
+      </div>
+
+      <div id="historyList" class="history-list"></div>
+    </div>
+    <!-- end page-history -->
+
+    <!-- ══════════════════════ PAGE: LIVE DEMO LAB (FIX 3) ══════════════════════ -->
+    <div class="page-content" id="page-demo">
+      <section class="demo-hero">
+        <div class="demo-hero-text">
+          <span class="section-tag"><i class="fa-solid fa-flask"></i> INTERACTIVE EVALUATION LAB</span>
+          <h2>Live Demo Lab</h2>
+          <p>Interactive demonstration of QR Guard's end-to-end security and recovery pipeline: generate QR codes, simulate degradation, apply recovery enhancements, decode payload, and evaluate heuristic risk indicators in real time.</p>
+        </div>
+      </section>
+
+      <!-- Scenario Selector Cards -->
+      <section class="card demo-selector-card">
+        <h3><i class="fa-solid fa-layer-group"></i> 1. Select a Demonstration Scenario</h3>
+        <p class="demo-selector-sub">Click any scenario to load its parameters, then follow the pipeline below.</p>
+        <div class="demo-scenarios-grid">
+          <div class="demo-scenario-card active" data-scenario="safe">
+            <div class="demo-scenario-header">
+              <span class="sample-badge safe"><i class="fa-solid fa-check-circle"></i> Safe (0)</span>
+              <i class="fa-solid fa-globe demo-scenario-icon"></i>
+            </div>
+            <h4>Official Wikipedia</h4>
+            <p>Clean HTTPS portal URL with zero risk indicators.</p>
+            <span class="scenario-target">https://wikipedia.org</span>
+          </div>
+
+          <div class="demo-scenario-card" data-scenario="blurry">
+            <div class="demo-scenario-header">
+              <span class="sample-badge suspicious"><i class="fa-solid fa-wand-magic-sparkles"></i> Blur Recovery</span>
+              <i class="fa-solid fa-image demo-scenario-icon"></i>
+            </div>
+            <h4>Blurry Degraded QR</h4>
+            <p>Defocus blur simulation requiring sharpening &amp; thresholding.</p>
+            <span class="scenario-target">https://github.com/shrutirajput745/qr-guard_02</span>
+          </div>
+
+          <div class="demo-scenario-card" data-scenario="shortener">
+            <div class="demo-scenario-header">
+              <span class="sample-badge suspicious"><i class="fa-solid fa-link"></i> Suspicious (35)</span>
+              <i class="fa-solid fa-mask demo-scenario-icon"></i>
+            </div>
+            <h4>Link Shortener Mask</h4>
+            <p>HTTP redirector masking real destination with low contrast.</p>
+            <span class="scenario-target">http://bit.ly/security-test-381</span>
+          </div>
+
+          <div class="demo-scenario-card" data-scenario="phishing">
+            <div class="demo-scenario-header">
+              <span class="sample-badge dangerous"><i class="fa-solid fa-skull-crossbones"></i> Dangerous (75)</span>
+              <i class="fa-solid fa-fish-fins demo-scenario-icon"></i>
+            </div>
+            <h4>Phishing Quishing Link</h4>
+            <p>Credential harvest simulation on high-risk .TOP domain.</p>
+            <span class="scenario-target">http://free-reward-claim.top/login</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Active Scenario Details & Pipeline Controls -->
+      <div id="demoActiveBanner" class="card demo-active-banner">
+        <div class="demo-active-info">
+          <div class="demo-active-header">
+            <h3 id="demoActiveTitle">Safe Official URL</h3>
+            <span id="demoActiveBadge" class="sample-badge safe">Safe (0 Risk)</span>
+          </div>
+          <p id="demoActiveDesc">Clean official Wikipedia HTTPS link.</p>
+          <div class="demo-active-target">
+            <i class="fa-solid fa-bullseye"></i>
+            <span>Target Payload:</span>
+            <code id="demoActivePayload">https://wikipedia.org</code>
+          </div>
+        </div>
+        <div class="demo-active-controls">
+          <button id="demoRunAllBtn" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-play"></i> Run Full Pipeline (1-Click)
+          </button>
+          <button id="demoResetBtn" class="btn btn-secondary">
+            <i class="fa-solid fa-rotate-left"></i> Reset Demo Lab
+          </button>
+        </div>
+      </div>
+
+      <!-- Pipeline Steps Navigation -->
+      <div class="pipeline-steps-track">
+        <div class="pipeline-step-badge active" id="demoStepBadge1">
+          <span class="step-num">1</span>
+          <span class="step-name">Generate QR</span>
+          <span class="demo-step-status" id="demoStepStatus1">Ready</span>
+        </div>
+        <div class="pipeline-step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        <div class="pipeline-step-badge" id="demoStepBadge2">
+          <span class="step-num">2</span>
+          <span class="step-name">Process / Filter</span>
+          <span class="demo-step-status" id="demoStepStatus2">Pending</span>
+        </div>
+        <div class="pipeline-step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        <div class="pipeline-step-badge" id="demoStepBadge3">
+          <span class="step-num">3</span>
+          <span class="step-name">Decode Payload</span>
+          <span class="demo-step-status" id="demoStepStatus3">Pending</span>
+        </div>
+        <div class="pipeline-step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        <div class="pipeline-step-badge" id="demoStepBadge4">
+          <span class="step-num">4</span>
+          <span class="step-name">Security Analysis</span>
+          <span class="demo-step-status" id="demoStepStatus4">Pending</span>
+        </div>
+      </div>
+
+      <!-- Error box -->
+      <div id="demoErrorBox" class="demo-error-box" style="display:none;"></div>
+
+      <!-- Loading State -->
+      <div id="demoLoadingState" class="demo-loading-state" style="display:none;">
+        <div class="spinner"></div>
+        <h4 id="demoProgressLabel">Processing image filters and decoding…</h4>
+        <p>Executing client-side canvas algorithms and heuristic risk scoring</p>
+      </div>
+
+      <!-- Studio Layout: Interactive Canvases -->
+      <div class="demo-studio-layout" id="demoStudioLayout">
+        <!-- Canvas 1: Original / Degraded QR -->
+        <div class="card demo-canvas-card">
+          <div class="canvas-card-header">
+            <h4><i class="fa-solid fa-qrcode"></i> Input / Scenario QR</h4>
+            <span class="badge-sub">Live HTML5 Canvas</span>
+          </div>
+          <div class="demo-canvas-wrapper">
+            <canvas id="demoOriginalCanvas" width="220" height="220" class="demo-canvas-view"></canvas>
+          </div>
+          <p class="canvas-caption">Simulates input from camera stream, file upload, or blur degradation.</p>
+          <button id="demoStepGenBtn" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-arrows-rotate"></i> Re-generate Input
+          </button>
+        </div>
+
+        <!-- Center Controls Column -->
+        <div class="demo-mid-controls">
+          <div class="flow-indicator"><i class="fa-solid fa-arrow-right"></i></div>
+          <button id="demoStepProcessBtn" class="btn btn-primary">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Process &amp; Decode
+          </button>
+          <span class="flow-hint">Runs recovery filters &amp; decodes QR modules</span>
+        </div>
+
+        <!-- Canvas 2: Processed & Enhanced QR -->
+        <div class="card demo-canvas-card">
+          <div class="canvas-card-header">
+            <h4><i class="fa-solid fa-wand-magic-sparkles"></i> Enhanced / Processed View</h4>
+            <span class="badge-sub">Filter Output</span>
+          </div>
+          <div class="demo-canvas-wrapper">
+            <canvas id="demoProcessedCanvas" width="220" height="220" class="demo-canvas-view"></canvas>
+          </div>
+          <div class="effective-method-box" style="display:none;">
+            <small>Applied Technique:</small>
+            <strong id="demoEffectiveMethod">Adaptive Thresholding</strong>
+          </div>
+          <p class="canvas-caption">Binarized / sharpened image passed into the QR decoding engine.</p>
+        </div>
+      </div>
+
+      <!-- Demonstration Security Results Card -->
+      <div id="demoResultCard" class="card demo-result-card" style="display:none;">
+        <div class="demo-result-header">
+          <span class="section-tag"><i class="fa-solid fa-shield-halved"></i> STEP 4 OUTCOME</span>
+          <h3>Live Security Verdict &amp; Heuristic Breakdown</h3>
+        </div>
+
+        <!-- Verdict Banner -->
+        <div id="demoVerdictBanner" class="status-banner status-safe">
+          <div class="banner-icon">
+            <i id="demoVerdictIcon" class="fa-solid fa-circle-check"></i>
+          </div>
+          <div class="banner-info">
+            <span class="status-label">DEMO SECURITY VERDICT</span>
+            <h2 id="demoVerdictTitle">SAFE / LOW RISK</h2>
+          </div>
+          <div class="score-badge-box">
+            <span class="score-num" id="demoScoreVal">0</span>
+            <span class="score-max">/100 RISK</span>
+          </div>
+        </div>
+
+        <!-- Extracted Payload Display -->
+        <div class="payload-box">
+          <div class="payload-header">
+            <span class="payload-type"><i class="fa-solid fa-link"></i> Extracted Payload (<span id="demoTypeLabel">URL</span>)</span>
+            <button id="demoSendToScannerBtn" class="btn btn-sm btn-outline">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in Universal Scanner
+            </button>
+          </div>
+          <div class="payload-text-wrapper">
+            <code id="demoExtractedPayload">—</code>
+          </div>
+        </div>
+
+        <!-- Explanation & Breakdown -->
+        <div class="explanation-card">
+          <h4><i class="fa-solid fa-chart-pie"></i> Risk Evaluation Summary</h4>
+          <p id="demoExplanationText" class="explanation-text"></p>
+        </div>
+
+        <div class="breakdown-card">
+          <h4><i class="fa-solid fa-triangle-exclamation"></i> Heuristic Indicators Evaluated</h4>
+          <div id="demoIssuesList" class="issues-list"></div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="demoEmptyState" class="demo-empty-state" style="display:none;">
+        <i class="fa-solid fa-flask"></i>
+        <h3>Ready to Explore the Live Demo Lab</h3>
+        <p>Select any scenario above or click <strong>"Run Full Pipeline"</strong> to test the live QR generation, blur recovery, decoding, and risk assessment.</p>
+      </div>
+
+    </div>
+    <!-- ══════════════════════ PAGE: SYSTEM ARCHITECTURE ══════════════════════ -->
+    <div class="page-content" id="page-architecture">
+      <section class="simple-arch-hero">
+        <div class="simple-arch-hero-card">
+          <div class="simple-arch-hero-text">
+            <span class="section-tag"><i class="fa-solid fa-sitemap"></i> SYSTEM ARCHITECTURE</span>
+            <h2>QR Guard: System Architecture &amp; Data Pipeline</h2>
+            <p>Technically accurate, step-by-step pipeline showing how QR Guard captures, decodes, inspects, scores, and presents QR security results to the user.</p>
+          </div>
+          <div class="simple-arch-hero-actions">
+            <button class="btn btn-primary" onclick="window.navigateToPage('presentation')">
+              <i class="fa-solid fa-chalkboard-user"></i> Open PPT Presentation
+            </button>
+            <a href="/QR_Guard_Presentation.pptx" download="QR_Guard_Presentation.pptx" class="btn btn-outline" style="text-decoration:none;">
+              <i class="fa-solid fa-file-powerpoint"></i> Download PPTX
+            </a>
+            <button class="btn btn-outline" id="archNextStepBtn">
+              <i class="fa-solid fa-forward-step"></i> Step Through
+            </button>
+            <button class="btn btn-secondary" id="archResetBtn">
+              <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- High-Resolution Architecture Flowchart Vector View -->
+      <section class="card arch-diagram-container" style="padding: 22px; margin-bottom: 24px; text-align: center;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+          <div style="text-align:left;">
+            <h3 style="font-size:1.15rem; font-weight:700; color:var(--text-main); margin-bottom:4px;">
+              <i class="fa-solid fa-sitemap" style="color:var(--accent-blue)"></i> Official System Architecture Flowchart
+            </h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin:0;">
+              High-resolution vector flowchart clearly distinguishing active client pipeline from planned blur recovery research.
+            </p>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <a href="images/system-architecture.svg" target="_blank" class="btn btn-sm btn-outline">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Vector SVG
+            </a>
+            <a href="images/system-architecture.svg" download="QR_Guard_System_Architecture.svg" class="btn btn-sm btn-secondary">
+              <i class="fa-solid fa-download"></i> Download SVG
+            </a>
+          </div>
+        </div>
+        <div style="border-radius: var(--radius-md); overflow:hidden; border: 1px solid var(--border-color); background: #090d16;">
+          <img src="images/system-architecture.svg" alt="QR Guard System Architecture Diagram" style="width:100%; height:auto; display:block;" />
+        </div>
+      </section>
+
+      <!-- 5-Step Visual Flowchart -->
+      <section class="simple-flowchart-card">
+        <div class="simple-flowchart-header">
+          <div>
+            <h3><i class="fa-solid fa-diagram-project"></i> Complete Project Architecture (5 Core Stages)</h3>
+            <p>Click any stage below to inspect its data flow, real module file, and concrete project example.</p>
+          </div>
+          <span class="sample-badge safe"><i class="fa-solid fa-shield-halved"></i> 100% In-Browser Pipeline</span>
+        </div>
+
+        <div class="simple-flow-track" id="simpleFlowTrack">
+          <!-- Flow nodes rendered dynamically by public/js/architecture.js -->
+        </div>
+      </section>
+
+      <!-- Step Details Card -->
+      <div id="simpleStepDetails">
+        <!-- Rendered dynamically by public/js/architecture.js -->
+      </div>
+    </div>
+    <!-- end page-architecture -->
+
+    <!-- ══════════════════════ PAGE: PROJECT PRESENTATION ══════════════════════ -->
+    <div class="page-content" id="page-presentation">
+      <div class="presentation-container">
+
+        <!-- Presentation Master Header Bar -->
+        <header class="presentation-header-bar">
+          <div class="presentation-brand-info">
+            <span class="pres-badge"><i class="fa-solid fa-graduation-cap"></i> College Presentation Mode</span>
+            <div class="presentation-title-tracker">
+              <span id="presSlideCounter" class="pres-tracker-text">Slide 01 / 09</span>
+              <h2 id="presSlideTitle">01. Title Slide</h2>
+            </div>
+          </div>
+
+          <div class="presentation-controls-group">
+            <button id="presPrevBtn" class="btn btn-sm btn-outline" title="Previous Slide (Left Arrow)">
+              <i class="fa-solid fa-chevron-left"></i> Prev
+            </button>
+            <button id="presNextBtn" class="btn btn-sm btn-primary" title="Next Slide (Right Arrow)">
+              Next <i class="fa-solid fa-chevron-right"></i>
+            </button>
+
+            <select id="presJumpSelect" class="pres-jump-select" title="Jump to Slide">
+              <option value="0">01. Cover &amp; Title</option>
+              <option value="1">02. Problem Statement</option>
+              <option value="2">03. Project Objectives</option>
+              <option value="3">04. Proposed Solution</option>
+              <option value="4">05. System Architecture</option>
+              <option value="5">06. Smart Technique</option>
+              <option value="6">07. Project Demonstration</option>
+              <option value="7">08. Future Roadmap</option>
+              <option value="8">09. Closing &amp; Thank You</option>
+            </select>
+
+            <button id="presShowArchBtn" class="btn btn-sm btn-secondary" title="View System Architecture (Slide 5)">
+              <i class="fa-solid fa-sitemap"></i> Architecture
+            </button>
+
+            <button id="presDownloadPptxBtn" class="btn btn-sm btn-outline" title="Download Presentation in PPTX format">
+              <i class="fa-solid fa-file-powerpoint"></i> Download PPTX
+            </button>
+
+            <button id="presFullscreenBtn" class="btn btn-sm btn-outline" title="Toggle Fullscreen Mode">
+              <i class="fa-solid fa-expand"></i> Fullscreen
+            </button>
+
+            <button id="presBackBtn" class="btn btn-sm btn-secondary" title="Return to QR Guard Scanner">
+              <i class="fa-solid fa-arrow-left"></i> Back to Scanner
+            </button>
+          </div>
+        </header>
+
+        <!-- Slide Progress Step Track (9 Slides) -->
+        <div class="presentation-track-wrapper">
+          <div class="presentation-track" id="presentationTrack">
+            <!-- 9 pills rendered by public/js/presentation.js -->
+          </div>
+        </div>
+
+        <!-- Master Presentation Deck (9 Clean Slides) -->
+        <div class="presentation-deck-card" id="presentationDeck">
+
+          <!-- ── SLIDE 1: Cover Slide ── -->
+          <div class="presentation-slide active" id="slide-0">
+            <div class="pres-title-hero" style="position:relative;">
+              <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 16px; border-radius:20px; background:rgba(0, 240, 255, 0.1); border:1px solid rgba(0, 240, 255, 0.3); color:var(--accent-blue); font-size:0.8rem; font-weight:700; margin-bottom:12px;">
+                <i class="fa-solid fa-shield-halved"></i> CYBERSECURITY CAPSTONE PROJECT
+              </div>
+              <h1 style="font-size:2.8rem; font-weight:800; color:var(--text-main); margin-bottom:6px; letter-spacing:-0.5px;">QR GUARD</h1>
+              <p class="pres-title-sub" style="font-size:1.35rem; font-weight:700; color:var(--accent-blue); margin-bottom:12px;">
+                Scan Smart. Think Safe.
+              </p>
+              <p class="pres-title-desc" style="max-width:760px; margin:0 auto 20px; font-size:0.95rem; line-height:1.6; color:var(--text-muted);">
+                An intelligent client-side QR scanner and heuristic URL security analyzer that inspects embedded content, flags deceptive web patterns, and safeguards users before navigation.
+              </p>
+
+              <!-- Academic Placeholders for College Evaluation Panel -->
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px; max-width:820px; margin:0 auto 22px; text-align:left;">
+                <div style="background:var(--bg-secondary); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+                  <div style="font-size:0.72rem; font-weight:700; color:var(--accent-blue); text-transform:uppercase;">Student Presenters</div>
+                  <div style="font-size:0.88rem; font-weight:600; color:var(--text-main); margin-top:2px;">[Student Names / Group]</div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">Roll No: [PRN / Roll Numbers]</div>
+                </div>
+                <div style="background:var(--bg-secondary); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+                  <div style="font-size:0.72rem; font-weight:700; color:var(--accent-blue); text-transform:uppercase;">Department &amp; Program</div>
+                  <div style="font-size:0.88rem; font-weight:600; color:var(--text-main); margin-top:2px;">Computer Engineering</div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">B.E. / B.Tech Computer Science</div>
+                </div>
+                <div style="background:var(--bg-secondary); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+                  <div style="font-size:0.72rem; font-weight:700; color:var(--accent-blue); text-transform:uppercase;">Faculty Guide</div>
+                  <div style="font-size:0.88rem; font-weight:600; color:var(--text-main); margin-top:2px;">[Guide / Professor Name]</div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">Academic Project Evaluation</div>
+                </div>
+              </div>
+
+              <div style="display:flex; justify-content:center; gap:14px; align-items:center;">
+                <button class="btn btn-primary" onclick="window.QRPresentation.nextSlide()">
+                  Start Presentation <i class="fa-solid fa-arrow-right"></i>
+                </button>
+                <a href="/QR_Guard_Presentation.pptx" download="QR_Guard_Presentation.pptx" class="btn btn-outline" style="text-decoration:none;">
+                  <i class="fa-solid fa-file-powerpoint"></i> Download .PPTX Slides
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SLIDE 2: Problem Statement ── -->
+          <div class="presentation-slide" id="slide-1">
+            <div class="slide-header">
+              <span class="slide-tag"><i class="fa-solid fa-triangle-exclamation"></i> 02 / 09 · PROBLEM STATEMENT</span>
+              <h2>Problem Statement: Hidden Risks in Visual Codes</h2>
+              <p>Visual problem-to-impact analysis of modern QR security vulnerabilities</p>
+            </div>
+
+            <div class="slide-content-grid-3">
+              <div class="slide-card-box">
+                <span class="step-badge" style="background:rgba(56, 189, 248, 0.12); color:var(--accent-blue); border:1px solid var(--accent-blue); margin-bottom:10px;">PROBLEM 01</span>
+                <h3><i class="fa-solid fa-eye-slash" style="color:var(--accent-blue)"></i> Opaque Destinations</h3>
+                <p>Users cannot visually inspect where a QR code will take them. It is impossible for human eyes to parse a matrix before scanning.</p>
+                <div style="margin-top:14px; padding:10px; background:var(--bg-secondary); border-radius:var(--radius-sm); border-left:3px solid var(--accent-blue);">
+                  <strong style="color:var(--accent-blue); font-size:0.78rem;">IMPACT:</strong>
+                  <div style="font-size:0.82rem; color:var(--text-main); margin-top:2px;">Blind trust leads users to open deceptive web destinations without prior verification.</div>
+                </div>
+              </div>
+
+              <div class="slide-card-box">
+                <span class="step-badge" style="background:rgba(245, 158, 11, 0.12); color:var(--warning-color); border:1px solid var(--warning-color); margin-bottom:10px;">PROBLEM 02</span>
+                <h3><i class="fa-solid fa-shield-virus" style="color:var(--warning-color)"></i> Unchecked URL Threats</h3>
+                <p>QR codes often contain links worthy of closer inspection: plain HTTP, raw IP hosts, deceptive @ signs, and credential-harvesting tokens.</p>
+                <div style="margin-top:14px; padding:10px; background:var(--bg-secondary); border-radius:var(--radius-sm); border-left:3px solid var(--warning-color);">
+                  <strong style="color:var(--warning-color); font-size:0.78rem;">IMPACT:</strong>
+                  <div style="font-size:0.82rem; color:var(--text-main); margin-top:2px;">Default phone camera apps auto-launch links, exposing users to quishing scams.</div>
+                </div>
+              </div>
+
+              <div class="slide-card-box">
+                <span class="step-badge" style="background:rgba(239, 68, 68, 0.12); color:var(--danger-color); border:1px solid var(--danger-color); margin-bottom:10px;">PROBLEM 03</span>
+                <h3><i class="fa-solid fa-image" style="color:var(--danger-color)"></i> Degraded Image Readability</h3>
+                <p>Camera defocus, glare, motion blur, and low-contrast lighting frequently prevent barcode libraries from reading codes.</p>
+                <div style="margin-top:14px; padding:10px; background:var(--bg-secondary); border-radius:var(--radius-sm); border-left:3px solid var(--danger-color);">
+                  <strong style="color:var(--danger-color); font-size:0.78rem;">IMPACT:</strong>
+                  <div style="font-size:0.82rem; color:var(--text-main); margin-top:2px;">Users experience silent scanning failures with no feedback or recovery avenues.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="arch-flow-pipeline-box" style="border-color: rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.06); margin-top:16px;">
+              <div class="pipeline-tag" style="color:var(--accent-blue)"><i class="fa-solid fa-circle-info"></i> Key Observation:</div>
+              <div style="font-size:0.88rem; color:var(--text-main);">
+                A dedicated, non-intrusive client security shield is necessary to inspect QR content <em>before</em> handing navigation off to the web browser.
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SLIDE 3: Project Objectives ── -->
+          <div class="presentation-slide" id="slide-2">
+            <div class="slide-header">
+              <span class="slide-tag"><i class="fa-solid fa-bullseye"></i> 03 / 09 · PROJECT OBJECTIVES</span>
+              <h2>Project Objectives: Clear Strategic Goals</h2>
+              <p>Distinguishing foundational project goals from concrete implementation features</p>
+            </div>
+
+            <div class="slide-content-grid-2">
+              <div class="slide-card-box" style="border-top:3px solid var(--accent-blue);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <span class="step-badge" style="background:rgba(56, 189, 248, 0.15); color:var(--accent-blue);">OBJECTIVE 01</span>
+                  <small style="color:var(--text-muted);">Core Capability</small>
+                </div>
+                <h3><i class="fa-solid fa-qrcode" style="color:var(--accent-blue)"></i> Interpret Supported QR Content</h3>
+                <p>Help users easily interpret supported QR payloads (URLs, Wi-Fi configuration, vCards, SMS, UPI payments) cleanly and safely before any action occurs.</p>
+              </div>
+
+              <div class="slide-card-box" style="border-top:3px solid var(--warning-color);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <span class="step-badge" style="background:rgba(245, 158, 11, 0.15); color:var(--warning-color);">OBJECTIVE 02</span>
+                  <small style="color:var(--text-muted);">Threat Awareness</small>
+                </div>
+                <h3><i class="fa-solid fa-triangle-exclamation" style="color:var(--warning-color)"></i> Improve Suspicious URL Awareness</h3>
+                <p>Provide transparent awareness of potentially dangerous links by exposing unencrypted connections, raw IP numbers, and deceptive redirection tricks.</p>
+              </div>
+
+              <div class="slide-card-box" style="border-top:3px solid var(--safe-color);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <span class="step-badge" style="background:rgba(16, 185, 129, 0.15); color:var(--safe-color);">OBJECTIVE 03</span>
+                  <small style="color:var(--text-muted);">Explainable UX</small>
+                </div>
+                <h3><i class="fa-solid fa-chart-pie" style="color:var(--safe-color)"></i> Make QR Analysis Easy to Understand</h3>
+                <p>Deliver an intuitive, explainable 0–100 risk score and clear 3-tier verdicts (Safe, Suspicious, Dangerous) backed by plain-language reason lists.</p>
+              </div>
+
+              <div class="slide-card-box" style="border-top:3px solid #a78bfa;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <span class="step-badge" style="background:rgba(167, 139, 250, 0.15); color:#a78bfa;">OBJECTIVE 04</span>
+                  <small style="color:#f59e0b;">Planned Research Phase</small>
+                </div>
+                <h3><i class="fa-solid fa-flask" style="color:#a78bfa)"></i> Explore Blurry QR Enhancement</h3>
+                <p>Investigate digital image processing filters (dynamic contrast adjustment, unsharp mask sharpening) in a future development phase for degraded QR images.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SLIDE 4: Proposed Solution ── -->
+          <div class="presentation-slide" id="slide-3">
+            <div class="slide-header">
+              <span class="slide-tag"><i class="fa-solid fa-shield"></i> 04 / 09 · PROPOSED SOLUTION</span>
+              <h2>Proposed Solution: QR Guard Defense Model</h2>
+              <p>Transparent separation of verified working functionality and future enhancements</p>
+            </div>
+
+            <div class="slide-content-grid-2">
+              <!-- Column 1: Implemented -->
+              <div class="slide-card-box" style="border-top:3px solid var(--safe-color); background:rgba(16, 185, 129, 0.04);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                  <span class="sample-badge safe"><i class="fa-solid fa-circle-check"></i> Implemented &amp; Active</span>
+                  <small style="color:var(--safe-color); font-weight:700;">100% Client-Side</small>
+                </div>
+                <h3 style="color:var(--text-main); margin-bottom:10px;">Active System Capabilities</h3>
+                <ul style="display:flex; flex-direction:column; gap:10px; margin-left:18px;">
+                  <li><strong>Multi-Input Acquisition:</strong> Live webcam video stream via <code>getUserMedia</code> and local image file drag-and-drop.</li>
+                  <li><strong>jsQR Decoding:</strong> In-browser corner finder pattern localization and Reed-Solomon payload extraction.</li>
+                  <li><strong>Content Routing:</strong> Automatic categorization into URLs, plain text, Wi-Fi credentials, or UPI payments.</li>
+                  <li><strong>Heuristic URL Inspection:</strong> 9 itemized checks (HTTP vs HTTPS, raw IPs, phishing keywords, shorteners, @ signs).</li>
+                  <li><strong>Defanged Preview:</strong> Sanitized display preventing accidental clicks with explicit user override.</li>
+                </ul>
+              </div>
+
+              <!-- Column 2: Planned -->
+              <div class="slide-card-box" style="border-top:3px solid var(--warning-color); background:rgba(245, 158, 11, 0.04);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                  <span class="sample-badge suspicious"><i class="fa-solid fa-flask"></i> Planned — Under Development</span>
+                  <small style="color:var(--warning-color); font-weight:700;">Future Milestones</small>
+                </div>
+                <h3 style="color:var(--text-main); margin-bottom:10px;">Future Development Modules</h3>
+                <ul style="display:flex; flex-direction:column; gap:10px; margin-left:18px;">
+                  <li><strong>Blur Recovery Lab:</strong> Experimental digital image processing module designed to test recovery of out-of-focus QR codes.</li>
+                  <li><strong>Adaptive Image Preprocessing:</strong> Dynamic contrast histogram stretching, unsharp mask convolution, and Otsu binarization.</li>
+                  <li><strong>Expanded Content Parsers:</strong> Deeper inspection of cryptocurrency transfer links and calendar invitations.</li>
+                  <li><strong>Serverless Sandbox Unshortener:</strong> Safe redirection path expansion without executing client scripts.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SLIDE 5: System Architecture Diagram ── -->
+          <div class="presentation-slide" id="slide-4">
+            <div class="slide-header">
+              <span class="slide-tag"><i class="fa-solid fa-sitemap"></i> 05 / 09 · SYSTEM ARCHITECTURE</span>
+              <h2>System Architecture &amp; Data Pipeline</h2>
+              <p>Engineering data flow clearly separating active execution from planned research workflows</p>
+            </div>
+
+            <!-- Vector Diagram Display -->
+            <div style="border-radius: var(--radius-md); overflow:hidden; border: 1px solid var(--border-color); background: #090d16; margin-bottom:14px;">
+              <img src="images/system-architecture.svg" alt="QR Guard System Architecture" style="width:100%; height:auto; display:block; max-height:360px; object-fit:contain;" />
+            </div>
+
+            <div class="arch-flow-pipeline-box" style="margin:0;">
+              <div class="pipeline-tag"><i class="fa-solid fa-code-branch"></i> Architectural Separation:</div>
+              <div style="font-size:0.84rem; color:var(--text-main);">
+                <strong>Primary Pipeline:</strong> User ➔ QR Input ➔ jsQR Decoding ➔ Content Classification ➔ URL Heuristic Analysis ➔ Result Presentation.<br>
+                <strong style="color:var(--warning-color);">Planned Workflow (Under Dev):</strong> Blurry QR Image ➔ Planned Preprocessing (Contrast/Sharpening) ➔ Decoder Hand-off.
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SLIDE 6: Smart Technique ── -->
+          <div class="presentation-slide" id="slide-5">
+            <div class="slide-header">
+              <span class="slide-tag"><i class="fa-solid fa-microchip"></i> 06 / 09 · TECHNICAL LOGIC</span>
+              <h2>Smart Technique: Deterministic Technical Approach</h2>
+              <p>Transparent, auditable cybersecurity rules without opaque black boxes or fabricated AI</p>
+            </div>
+
+            <div class="slide-content-grid-2">
+              <div class="slide-card-box">
+                <span class="step-badge" style="background:rgba(56, 189, 248, 0.12); color:var(--accent-blue); border:1px solid var(--accent-blue); margin-bottom:8px;">TECHNIQUE 1</span>
+                <h3><i class="fa-solid fa-qrcode" style="color:var(--accent-blue)"></i> QR Decoding &amp; Localization</h3>
+                <p>Processes image pixel arrays on an HTML5 Canvas, identifies 3 finder pattern markers, establishes perspective coordinates, and computes Reed-Solomon error correction.</p>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;">Implementation: <code>jsQR</code> client library · Zero server dependency</div>
+              </div>
+
+              <div class="slide-card-box">
+                <span class="step-badge" style="background:rgba(167, 139, 250, 0.12); color:#a78bfa; border:1px solid #a78bfa; margin-bottom:8px;">TECHNIQUE 2</span>
+                <h3><i class="fa-solid fa-route" style="color:#a78bfa"></i> Content-Dependent Handling</h3>
+                <p>Detects payload schemas (http/https, WIFI:, upi://, tel:, mailto:). Applies specialized classification rendering and sanitizes suspicious schemes like <code>javascript:</code>.</p>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;">Implementation: Deterministic schema routing &amp; defanging</div>
+              </div>
+
+              <div class="slide-card-box">
+                <span class="step-badge" style="background:rgba(245, 158, 11, 0.12); color:var(--warning-color); border:1px solid var(--warning-color); margin-bottom:8px;">TECHNIQUE 3</span>
+                <h3><i class="fa-solid fa-magnifying-glass-chart" style="color:var(--warning-color)"></i> 9-Rule Heuristic URL Analyzer</h3>
+                <p>Inspects protocol security, raw IP addresses, high-risk TLDs, phishing keywords ("login", "verify", "bank"), URL shorteners, and @ sign redirection tricks into an explainable 0–100 score.</p>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;">Implementation: <code>analyzer.js</code> rule matrix with explainable evidence</div>
+              </div>
+
+              <div class="slide-card-box">
+                <span class="step-badge" style="background:rgba(239, 68, 68, 0.12); color:var(--danger-color); border:1px solid var(--danger-color); margin-bottom:8px;">TECHNIQUE 4</span>
+                <h3><i class="fa-solid fa-flask" style="color:var(--danger-color)"></i> Planned Image Preprocessing</h3>
+                <p>Researching digital image processing filters (3x3 unsharp convolution kernel, dynamic histogram stretching, Otsu thresholding) for recovering blurred QR codes.</p>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;">Status: Under Active Development &amp; Research Testing</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SLIDE 7: Project Demonstration ── -->
+          <div class="presentation-slide" id="slide-6">
+            <div class="slide-header">
+              <span class="slide-tag"><i class="fa-solid fa-desktop"></i> 07 / 09 · DEMONSTRATION</span>
+              <h2>Project Demonstration: Verified Application Features</h2>
+              <p>Walkthrough of genuine, implemented application workflows ready for evaluation</p>
+            </div>
+
+            <div class="slide-content-grid-3">
+              <div class="slide-card-box">
+                <span class="step-badge" style="background:rgba(16, 185, 129, 0.12); color:var(--safe-color); border:1px solid var(--safe-color); margin-bottom:10px;">AREA 01</span>
+                <h3><i class="fa-solid fa-camera" style="color:var(--accent-blue)"></i> Input &amp; Decoding</h3>
+                <p>Webcam stream or file drag-and-drop feeds raw pixel frames directly to the client canvas buffer.</p>
+                <ul style="margin-top:10px; font-size:0.84rem; color:var(--text-muted);">
+                  <li>Live camera continuous video scanner</li>
+                  <li>Drag-and-drop file upload zone</li>
+                  <li>Built-in safe &amp; phishing sample presets</li>
+                </ul>
+              </div>
+
+              <div class="slide-card-box">
+                <span class="step-badge" style="background:rgba(16, 185, 129, 0.12); color:var(--safe-color); border:1px solid var(--safe-color); margin-bottom:10px;">AREA 02</span>
+                <h3><i class="fa-solid fa-file-shield" style="color:var(--safe-color)"></i> Decoded Results</h3>
+                <p>Extracted information is displayed in a clean defanged view without auto-launching external pages.</p>
+                <ul style="margin-top:10px; font-size:0.84rem; color:var(--text-muted);">
+                  <li>Sanitized defanged URL presentation</li>
+                  <li>QR type indicator (URL, Wi-Fi, Text, UPI)</li>
+                  <li>Copy to clipboard &amp; guided action hints</li>
+                </ul>
+              </div>
+
+              <div class="slide-card-box">
+                <span class="step-badge" style="background:rgba(16, 185, 129, 0.12); color:var(--safe-color); border:1px solid var(--safe-color); margin-bottom:10px;">AREA 03</span>
+                <h3><i class="fa-solid fa-shield-halved" style="color:var(--warning-color)"></i> URL Analysis</h3>
+                <p>Deterministic heuristics compute risk score (0–100) and assign Safe, Suspicious, or Dangerous tiers.</p>
+                <ul style="margin-top:10px; font-size:0.84rem; color:var(--text-muted);">
+                  <li>Color-coded risk meter &amp; verdict badge</li>
+                  <li>Itemized rule findings with exact reasons</li>
+                  <li>Private local history logging in browser</li>
+                </ul>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:12px; margin-top:18px;">
+              <button class="btn btn-primary" onclick="window.navigateToPage('scanner')">
+                <i class="fa-solid fa-play"></i> Open Live Universal Scanner
+              </button>
+              <button class="btn btn-secondary" onclick="window.navigateToPage('history')">
+                <i class="fa-solid fa-clock-rotate-left"></i> View Scan History
+              </button>
+            </div>
+          </div>
+
+          <!-- ── SLIDE 8: Future Roadmap ── -->
+          <div class="presentation-slide" id="slide-7">
+            <div class="slide-header">
+              <span class="slide-tag"><i class="fa-solid fa-road"></i> 08 / 09 · FUTURE ROADMAP</span>
+              <h2>Future Roadmap: Four Engineering Milestones</h2>
+              <p>Clearly identified future development milestones beyond the initial capstone release</p>
+            </div>
+
+            <div class="slide-content-grid-2">
+              <div class="slide-card-box" style="border-left:4px solid var(--warning-color);">
+                <span class="step-badge" style="background:rgba(245, 158, 11, 0.15); color:var(--warning-color); margin-bottom:6px;">MILESTONE 01</span>
+                <h3>Implement &amp; Test Blur Recovery Lab</h3>
+                <p>Complete implementation and validation of browser-based digital image processing techniques (dynamic contrast, unsharp mask kernel) to reliably recover blurry or low-contrast QR codes.</p>
+              </div>
+
+              <div class="slide-card-box" style="border-left:4px solid var(--accent-blue);">
+                <span class="step-badge" style="background:rgba(56, 189, 248, 0.15); color:var(--accent-blue); margin-bottom:6px;">MILESTONE 02</span>
+                <h3>Improve URL Analysis &amp; Testing</h3>
+                <p>Expand heuristic rule definitions, integrate safe sandboxed serverless URL unshortening to follow redirect chains, and expand automated test suites for emerging threat vectors.</p>
+              </div>
+
+              <div class="slide-card-box" style="border-left:4px solid #a78bfa);">
+                <span class="step-badge" style="background:rgba(167, 139, 250, 0.15); color:#a78bfa; margin-bottom:6px;">MILESTONE 03</span>
+                <h3>Test Additional QR Content Types</h3>
+                <p>Support deeper schema validation for cryptocurrency wallet addresses, complex multi-field vCards, calendar events, and international payment standards.</p>
+              </div>
+
+              <div class="slide-card-box" style="border-left:4px solid var(--safe-color);">
+                <span class="step-badge" style="background:rgba(16, 185, 129, 0.15); color:var(--safe-color); margin-bottom:6px;">MILESTONE 04</span>
+                <h3>Improve Usability &amp; Error Handling</h3>
+                <p>Implement camera torch toggle, zoom slider controls, real-time lighting quality indicators, exportable PDF scan audit reports, and accessibility enhancements.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SLIDE 9: Closing ── -->
+          <div class="presentation-slide" id="slide-8">
+            <div class="slide-header">
+              <span class="slide-tag"><i class="fa-solid fa-flag-checkered"></i> 09 / 09 · CONCLUSION</span>
+              <h2>Closing &amp; Evaluation Readiness</h2>
+              <p>Project summary and readiness for academic evaluation</p>
+            </div>
+
+            <div class="pres-title-hero" style="padding: 24px; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-top: 10px;">
+              <h1 style="font-size: 2.4rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">
+                Thank You
+              </h1>
+              <p style="font-size: 1.25rem; font-weight: 700; color: var(--accent-blue); margin-bottom: 14px;">
+                QR Guard &mdash; Scan Smart. Think Safe.
+              </p>
+
+              <div style="max-width: 760px; margin: 0 auto 20px; font-size: 0.95rem; line-height: 1.6; color: var(--text-muted); text-align: center;">
+                QR Guard successfully delivers an accessible, privacy-preserving client security barrier against QR phishing. By combining local camera decoding with transparent heuristic risk scoring, it protects users without sending personal data to external servers.
+              </div>
+
+              <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 18px; border-radius:20px; background:rgba(16, 185, 129, 0.12); border:1px solid var(--safe-color); color:var(--safe-color); font-weight:700; font-size:0.88rem; margin-bottom:20px;">
+                <i class="fa-solid fa-circle-check"></i> Ready for Live Demonstration &amp; Evaluation
+              </div>
+
+              <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="window.navigateToPage('scanner')">
+                  <i class="fa-solid fa-play"></i> Launch Live Scanner
+                </button>
+                <button class="btn btn-secondary" onclick="window.navigateToPage('architecture')">
+                  <i class="fa-solid fa-sitemap"></i> View Architecture
+                </button>
+                <a href="/QR_Guard_Presentation.pptx" download="QR_Guard_Presentation.pptx" class="btn btn-outline" style="text-decoration:none;">
+                  <i class="fa-solid fa-file-powerpoint"></i> Download PPTX File
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Presentation Bottom Controls / Shortcut Hints -->
+        <footer class="presentation-bottom-bar">
+          <div class="pres-keys-hint">
+            <span><span class="pres-key-badge">&#8592;</span> Prev Slide</span>
+            <span><span class="pres-key-badge">&#8594;</span> Next Slide</span>
+            <span><span class="pres-key-badge">Space</span> Advance</span>
+            <span><span class="pres-key-badge">Esc</span> Fullscreen Exit</span>
+          </div>
+          <div>
+            <strong>QR Guard</strong> &mdash; Computer Engineering Project Evaluation
+          </div>
+        </footer>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════ FOOTER ═══════════════════════════════════ -->
     <footer class="app-footer">
-      <p><strong>QR Guide 2</strong> &copy; 2026 — Transparent QR Security & Risk Scoring System | Academic Prototype</p>
+      <p><strong>QR Guard</strong> &copy; 2026 — Universal QR Security · Scan Any QR · Analyze Risk · Recover Blurry Codes · Stay Safe | Academic Prototype</p>
     </footer>
 
   </div>
 
-  <!-- External Libraries -->
+  <!-- External & Vendor Libraries (Local offline-first with CDN fallback) -->
+  <script src="js/vendor/jsQR.js"></script>
+  <script src="js/vendor/qrcode.min.js"></script>
+  <script src="js/vendor/html5-qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
   <!-- App Modules -->
   <script src="js/analyzer.js"></script>
   <script src="js/scanner.js"></script>
   <script src="js/samples.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/recovery.js"></script>
+  <script src="js/demo.js"></script>
+  <script src="js/architecture.js"></script>
+  <script src="js/presentation.js"></script>
   <script src="js/app.js"></script>
 
 </body>

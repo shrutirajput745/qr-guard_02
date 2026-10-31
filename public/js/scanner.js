@@ -1,10 +1,11 @@
 /**
- * QR Guide 2 - Camera & File QR Scanner Module
+ * QR Guard - Camera & File QR Scanner Module
  * Handles camera scanning, drag-and-drop file decoding, and unreadable QR error handling.
  */
 
 window.QRScanner = {
   html5QrcodeScanner: null,
+  currentUploadFile: null,
   isScanning: false,
   onScanSuccessCallback: null,
   onScanErrorCallback: null,
@@ -12,7 +13,23 @@ window.QRScanner = {
   init: function(onSuccess, onError) {
     this.onScanSuccessCallback = onSuccess;
     this.onScanErrorCallback = onError;
+    // Initialize UI components
     this.setupDropZone();
+    // Enhance & Scan button wiring
+    const enhanceBtn = document.getElementById('enhanceScanBtn');
+    if (enhanceBtn) {
+      enhanceBtn.addEventListener('click', () => {
+        if (!this.currentUploadFile) {
+          this.onScanErrorCallback && this.onScanErrorCallback('No file selected for enhancement.');
+          return;
+        }
+        const navRecovery = document.getElementById('navRecovery');
+        if (navRecovery) navRecovery.click();
+        if (window.QRRecovery) {
+          window.QRRecovery.startRecovery(this.currentUploadFile);
+        }
+      });
+    }
   },
 
   startCamera: function() {
@@ -102,13 +119,19 @@ window.QRScanner = {
     dropZone.addEventListener('drop', (e) => {
       const dt = e.dataTransfer;
       const files = dt.files;
-      if (files.length > 0) {
+      if (files && files.length > 0) {
+        this.currentUploadFile = files[0];
+        const enhanceBtn = document.getElementById('enhanceScanBtn');
+        if (enhanceBtn) enhanceBtn.style.display = 'inline-block';
         this.handleFile(files[0]);
       }
     });
 
     fileInput.addEventListener('change', (e) => {
-      if (e.target.files.length > 0) {
+      if (e.target.files && e.target.files.length > 0) {
+        this.currentUploadFile = e.target.files[0];
+        const enhanceBtn = document.getElementById('enhanceScanBtn');
+        if (enhanceBtn) enhanceBtn.style.display = 'inline-block';
         this.handleFile(e.target.files[0]);
       }
     });
@@ -138,17 +161,33 @@ window.QRScanner = {
       if (uploadPreview) uploadPreview.style.display = 'flex';
     };
     reader.readAsDataURL(file);
+    // store current file for enhancement
+    this.currentUploadFile = file;
 
-    // Decode QR from image file
-    const html5QrCode = new Html5Qrcode("reader");
-    html5QrCode.scanFile(file, true)
-      .then(decodedText => {
-        if (this.onScanSuccessCallback) {
-          this.onScanSuccessCallback(decodedText);
+    const tryJsQr = () => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const cvs = document.createElement('canvas');
+          cvs.width = img.naturalWidth || img.width;
+          cvs.height = img.naturalHeight || img.height;
+          const ctx = cvs.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+          if (window.jsQR) {
+            const qr = window.jsQR(imgData.data, cvs.width, cvs.height, { inversionAttempts: 'attemptBoth' });
+            if (qr && qr.data) {
+              if (this.onScanSuccessCallback) {
+                this.onScanSuccessCallback(qr.data);
+              }
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn("jsQR fallback scan error:", e);
         }
-      })
-      .catch(err => {
-        console.error("QR Decoding failed:", err);
+
+        // Both decoders failed
         if (uploadErrorBox) {
           uploadErrorBox.style.display = 'block';
           uploadErrorBox.innerHTML = `
@@ -156,18 +195,41 @@ window.QRScanner = {
               <i class="fa-solid fa-triangle-exclamation"></i>
               <div>
                 <strong>Unreadable QR Code:</strong>
-                <p>No valid QR pattern was detected in this image. Ensure the image is well-lit, unblurred, and contains a complete QR code.</p>
+                <p>No valid QR pattern detected directly. Try clicking <strong>"Enhance & Scan"</strong> below to recover blurry, low-contrast, or noisy QR codes.</p>
               </div>
             </div>
           `;
         }
         if (this.onScanErrorCallback) {
-          this.onScanErrorCallback("Could not extract a valid QR code from the uploaded image.");
+          this.onScanErrorCallback("Could not extract a valid QR code directly. Try the Blur Recovery Lab.");
         }
-      });
+      };
+      img.src = reader.result;
+    };
+
+    // Decode QR from image file using Html5Qrcode, fallback to jsQR
+    try {
+      const html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.scanFile(file, true)
+        .then(decodedText => {
+          if (this.onScanSuccessCallback) {
+            this.onScanSuccessCallback(decodedText);
+          }
+        })
+        .catch(err => {
+          console.warn("Html5Qrcode scan failed, trying jsQR fallback:", err);
+          tryJsQr();
+        });
+    } catch (e) {
+      tryJsQr();
+    }
   },
 
   resetUpload: function() {
+    // Reset current file and hide enhance button
+    this.currentUploadFile = null;
+    const enhanceBtn = document.getElementById('enhanceScanBtn');
+    if (enhanceBtn) enhanceBtn.style.display = 'none';
     const dropZone = document.getElementById('dropZone');
     const uploadPreview = document.getElementById('uploadPreview');
     const fileInput = document.getElementById('fileInput');

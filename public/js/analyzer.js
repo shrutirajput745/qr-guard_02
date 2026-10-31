@@ -1,6 +1,6 @@
 /**
- * QR Guide 2 - Transparent Heuristic URL & QR Security Analyzer Engine
- * Evaluates security indicators and provides an itemized score breakdown.
+ * QR Guard - Universal QR Type Classifier & Transparent Security Analyzer Engine
+ * Classifies QR payload types, extracts structured data, and evaluates security indicators.
  * Compatible with both Browser (window.QRAnalyzer) and Node.js (module.exports).
  */
 
@@ -11,6 +11,227 @@
     root.QRAnalyzer = factory();
   }
 })(typeof self !== 'undefined' ? self : this, function() {
+
+  /**
+   * Universal QR Type Classifier
+   * Returns { type, label, icon, parsedData } for any QR payload.
+   */
+  function classifyQRType(payload) {
+    if (!payload || typeof payload !== 'string') {
+      return { type: 'unknown', label: 'Unknown', icon: 'fa-question-circle', parsedData: {} };
+    }
+    const p = payload.trim();
+    const lower = p.toLowerCase();
+
+    // UPI Payment QR
+    if (/^upi:\/\//i.test(p)) {
+      const params = {};
+      try {
+        const url = new URL(p);
+        params.pa = url.searchParams.get('pa') || '';   // payee address
+        params.pn = url.searchParams.get('pn') || '';   // payee name
+        params.am = url.searchParams.get('am') || '';   // amount
+        params.tn = url.searchParams.get('tn') || '';   // transaction note
+        params.cu = url.searchParams.get('cu') || 'INR'; // currency
+      } catch (e) { /* ignore parse error */ }
+      return {
+        type: 'upi',
+        label: 'UPI Payment',
+        icon: 'fa-indian-rupee-sign',
+        parsedData: {
+          payeeAddress: params.pa,
+          payeeName: params.pn,
+          amount: params.am || 'Not specified',
+          note: params.tn || 'None',
+          currency: params.cu
+        }
+      };
+    }
+
+    // Wi-Fi QR (WIFI:S:ssid;T:WPA;P:pass;;)
+    if (/^WIFI:/i.test(p)) {
+      const ssid  = (p.match(/S:([^;]+)/i) || [])[1] || '';
+      const type  = (p.match(/T:([^;]+)/i) || [])[1] || 'WPA';
+      const hidden = (p.match(/H:(true|false)/i) || [])[1] || 'false';
+      return {
+        type: 'wifi',
+        label: 'Wi-Fi Network',
+        icon: 'fa-wifi',
+        parsedData: {
+          ssid,
+          security: type.toUpperCase(),
+          hidden: hidden === 'true',
+          password: '●●●●●●●● (masked for privacy)'
+        }
+      };
+    }
+
+    // vCard Contact
+    if (/^BEGIN:VCARD/i.test(p)) {
+      const name   = (p.match(/FN:(.+)/i) || [])[1] || '';
+      const tel    = (p.match(/TEL[^:]*:(.+)/i) || [])[1] || '';
+      const email  = (p.match(/EMAIL[^:]*:(.+)/i) || [])[1] || '';
+      const org    = (p.match(/ORG:(.+)/i) || [])[1] || '';
+      return {
+        type: 'vcard',
+        label: 'Contact Card (vCard)',
+        icon: 'fa-address-card',
+        parsedData: { name: name.trim(), phone: tel.trim(), email: email.trim(), organization: org.trim() }
+      };
+    }
+
+    // Email (mailto:)
+    if (/^mailto:/i.test(p)) {
+      let to = '', subject = '', body = '';
+      try {
+        const url = new URL(p);
+        to = url.pathname;
+        subject = url.searchParams.get('subject') || '';
+        body = url.searchParams.get('body') || '';
+      } catch (e) {
+        to = p.replace(/^mailto:/i, '').split('?')[0];
+      }
+      return {
+        type: 'email',
+        label: 'Email Address',
+        icon: 'fa-envelope',
+        parsedData: { to, subject, body: body ? body.substring(0, 80) + (body.length > 80 ? '…' : '') : '' }
+      };
+    }
+
+    // Phone number (tel:)
+    if (/^tel:/i.test(p)) {
+      return {
+        type: 'phone',
+        label: 'Phone Number',
+        icon: 'fa-phone',
+        parsedData: { number: p.replace(/^tel:/i, '') }
+      };
+    }
+
+    // SMS
+    if (/^(sms:|smsto:)/i.test(p)) {
+      const raw = p.replace(/^(sms:|smsto:)/i, '');
+      const [number, ...msgParts] = raw.split(':');
+      return {
+        type: 'sms',
+        label: 'SMS Message',
+        icon: 'fa-comment-sms',
+        parsedData: { number: number.trim(), message: msgParts.join(':').trim() || '' }
+      };
+    }
+
+    // Geo location (geo:lat,lng)
+    if (/^geo:/i.test(p)) {
+      const coords = p.replace(/^geo:/i, '').split(',');
+      return {
+        type: 'geo',
+        label: 'Geographic Location',
+        icon: 'fa-location-dot',
+        parsedData: {
+          latitude: coords[0] || '',
+          longitude: coords[1] ? coords[1].split(';')[0] : '',
+        }
+      };
+    }
+
+    // App Store links (Apple / Google Play)
+    if (/apps\.apple\.com/i.test(p) || /play\.google\.com\/store/i.test(p)) {
+      const store = /apps\.apple\.com/i.test(p) ? 'Apple App Store' : 'Google Play Store';
+      return {
+        type: 'applink',
+        label: `App Download (${store})`,
+        icon: 'fa-mobile-screen-button',
+        parsedData: { store, url: p }
+      };
+    }
+
+    // Dangerous / executable schemes
+    if (/^(javascript:|data:|file:|vbscript:|intent:)/i.test(p)) {
+      return {
+        type: 'dangerous',
+        label: 'Dangerous Executable Scheme',
+        icon: 'fa-skull-crossbones',
+        parsedData: { scheme: p.split(':')[0] }
+      };
+    }
+
+    // Social Media detection (domain-based) — checked before generic Web URL fallback
+    const socialDomains = {
+      'facebook.com': { label: 'Facebook', icon: 'fa-brands fa-facebook' },
+      'instagram.com': { label: 'Instagram', icon: 'fa-brands fa-instagram' },
+      'twitter.com': { label: 'X / Twitter', icon: 'fa-brands fa-x-twitter' },
+      'x.com': { label: 'X / Twitter', icon: 'fa-brands fa-x-twitter' },
+      'linkedin.com': { label: 'LinkedIn', icon: 'fa-brands fa-linkedin' },
+      'youtube.com': { label: 'YouTube', icon: 'fa-brands fa-youtube' },
+      'youtu.be': { label: 'YouTube', icon: 'fa-brands fa-youtube' },
+      'tiktok.com': { label: 'TikTok', icon: 'fa-brands fa-tiktok' },
+      'wa.me': { label: 'WhatsApp', icon: 'fa-brands fa-whatsapp' },
+      'whatsapp.com': { label: 'WhatsApp', icon: 'fa-brands fa-whatsapp' },
+    };
+
+    let potentialHost = '';
+    try {
+      if (/^https?:\/\//i.test(p) || /^ftp:\/\//i.test(p)) {
+        potentialHost = new URL(p).hostname.toLowerCase();
+      } else {
+        potentialHost = p.split('/')[0].split(':')[0].toLowerCase();
+      }
+    } catch (e) {
+      potentialHost = '';
+    }
+
+    if (potentialHost) {
+      for (const [domain, info] of Object.entries(socialDomains)) {
+        if (potentialHost === domain || potentialHost.endsWith('.' + domain)) {
+          return {
+            type: 'social',
+            label: `Social Media (${info.label})`,
+            icon: info.icon,
+            parsedData: { platform: info.label, url: p }
+          };
+        }
+      }
+    }
+
+    // Web URL (http / https / ftp)
+    if (/^https?:\/\//i.test(p) || /^ftp:\/\//i.test(p)) {
+      try {
+        const url = new URL(p);
+        return {
+          type: 'url',
+          label: 'Website URL',
+          icon: 'fa-globe',
+          parsedData: {
+            protocol: url.protocol,
+            host: url.hostname,
+            path: url.pathname !== '/' ? url.pathname : '',
+            query: url.search || ''
+          }
+        };
+      } catch (e) { /* fallthrough */ }
+    }
+
+    // Plain URL without protocol that looks like a domain
+    if (/^[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/.*)?$/i.test(p)) {
+      return {
+        type: 'url',
+        label: 'Website URL',
+        icon: 'fa-globe',
+        parsedData: { host: p.split('/')[0], path: p.includes('/') ? '/' + p.split('/').slice(1).join('/') : '' }
+      };
+    }
+
+    // Plain text fallback
+    return {
+      type: 'text',
+      label: 'Plain Text',
+      icon: 'fa-font',
+      parsedData: { length: p.length, preview: p.substring(0, 100) }
+    };
+  }
+
+
 
   // Helper to safely extract domain parts
   function parseHost(hostname) {
@@ -77,9 +298,16 @@
   const QRAnalyzer = {
 
     analyze: function(rawPayload) {
+      // Classify QR type first (runs for all payloads)
+      const qrClassification = classifyQRType(rawPayload);
+
       const result = {
         input: rawPayload,
         isUrl: false,
+        qrType: qrClassification.type,
+        qrTypeLabel: qrClassification.label,
+        qrTypeIcon: qrClassification.icon,
+        parsedData: qrClassification.parsedData,
         score: 0,
         status: 'Safe', // Safe (0-29), Suspicious (30-69), Dangerous (70-100)
         issues: [],
@@ -87,7 +315,7 @@
         highlights: [],
         explanation: '',
         advice: '',
-        disclaimer: 'Disclaimer: This prototype uses transparent heuristic risk scoring for educational evaluation. It does not guarantee absolute URL safety or detect all zero-day threats.',
+        disclaimer: 'Disclaimer: QR Guard uses transparent heuristic risk scoring for educational evaluation. It does not guarantee absolute URL safety or detect all zero-day threats.',
         metrics: {
           protocol: 'N/A',
           hostType: 'Text Payload',
@@ -497,8 +725,10 @@
       };
 
       return result;
-    }
+    },
 
+    // Expose the classifier publicly
+    classifyQRType: classifyQRType
   };
 
   return QRAnalyzer;
