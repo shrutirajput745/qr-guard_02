@@ -1,0 +1,245 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- Background Radial Glow -->
+    <radialGradient id="heroBackGlow" cx="50%" cy="48%" r="48%">
+      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.18" />
+      <stop offset="50%" stop-color="#1d4ed8" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#080c14" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Outer Shield Gradient -->
+    <linearGradient id="shieldHullGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0e223d" />
+      <stop offset="50%" stop-color="#0b172a" />
+      <stop offset="100%" stop-color="#060c18" />
+    </linearGradient>
+
+    <!-- Shield Border Gradient -->
+    <linearGradient id="shieldBorderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff" />
+      <stop offset="45%" stop-color="#38bdf8" />
+      <stop offset="80%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#00f0ff" />
+    </linearGradient>
+
+    <!-- Laser Scan Line Gradient -->
+    <linearGradient id="scanLaserGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0" />
+      <stop offset="20%" stop-color="#00f0ff" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="1" />
+      <stop offset="80%" stop-color="#00f0ff" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#00f0ff" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Laser Scan Glow Gradient -->
+    <linearGradient id="scanGlowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0" />
+      <stop offset="50%" stop-color="#00f0ff" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#00f0ff" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Drop Shadow Filter for Shield Elevation -->
+    <filter id="shieldShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.65" />
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#00f0ff" flood-opacity="0.25" />
+    </filter>
+
+    <filter id="cyanGlowEffect" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Ambient Backdrop Glow -->
+  <circle cx="250" cy="240" r="225" fill="url(#heroBackGlow)" />
+
+  <!-- Radar & Coordinate Geometry Rings -->
+  <circle cx="250" cy="240" r="218" fill="none" stroke="rgba(0, 240, 255, 0.08)" stroke-width="1.5" stroke-dasharray="5 7" />
+  <circle cx="250" cy="240" r="185" fill="none" stroke="rgba(56, 189, 248, 0.12)" stroke-width="1" />
+  <circle cx="250" cy="240" r="145" fill="none" stroke="rgba(0, 240, 255, 0.06)" stroke-width="1" stroke-dasharray="3 5" />
+
+  <!-- 4 Precision Viewfinder Corner Brackets -->
+  <g stroke="#00f0ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85">
+    <!-- Top-Left -->
+    <path d="M 38,72 L 38,38 L 72,38" />
+    <!-- Top-Right -->
+    <path d="M 428,38 L 462,38 L 462,72" />
+    <!-- Bottom-Left -->
+    <path d="M 38,428 L 38,462 L 72,462" />
+    <!-- Bottom-Right -->
+    <path d="M 428,462 L 462,462 L 462,428" />
+  </g>
+
+  <!-- Corner Coordinates & Target Crosshairs -->
+  <g fill="#00f0ff" opacity="0.6" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="600">
+    <text x="44" y="28">SEC.01</text>
+    <text x="418" y="28">QR.SYS</text>
+    <text x="44" y="482">0xGUARD</text>
+    <text x="412" y="482">ACTIVE</text>
+  </g>
+
+  <!-- Circuit Traces Connecting from Outer Hull -->
+  <g stroke="rgba(0, 240, 255, 0.28)" stroke-width="1.5" fill="none" stroke-linecap="round">
+    <path d="M 98,160 L 62,160 L 50,172" />
+    <circle cx="50" cy="172" r="3" fill="#00f0ff" />
+
+    <path d="M 402,160 L 438,160 L 450,148" />
+    <circle cx="450" cy="148" r="3" fill="#00f0ff" />
+
+    <path d="M 250,424 L 250,452" />
+    <circle cx="250" cy="452" r="3.5" fill="#00f0ff" />
+  </g>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- MAIN SECURITY SHIELD HULL                                             -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <g filter="url(#shieldShadow)">
+    <!-- Outer Shield Body -->
+    <path d="M 250,56 C 338,56 404,78 404,146 C 404,282 308,382 250,424 C 192,382 96,282 96,146 C 96,78 162,56 250,56 Z"
+          fill="url(#shieldHullGrad)"
+          stroke="url(#shieldBorderGrad)"
+          stroke-width="3" />
+
+    <!-- Inner Shield Inset Frame -->
+    <path d="M 250,72 C 322,72 384,92 384,152 C 384,268 298,358 250,396 C 202,358 116,268 116,152 C 116,92 178,72 250,72 Z"
+          fill="#060c18"
+          stroke="rgba(0, 240, 255, 0.25)"
+          stroke-width="1.2"
+          stroke-dasharray="7 5" />
+  </g>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- QR CODE MATRIX CORE (INSIDE SHIELD)                                  -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <g transform="translate(0, -6)">
+    <!-- QR Plate Background Card -->
+    <rect x="150" y="120" width="200" height="200" rx="14"
+          fill="#0a1222"
+          stroke="rgba(56, 189, 248, 0.3)"
+          stroke-width="1.5" />
+
+    <!-- QR Micro-Grid Background Pattern -->
+    <g stroke="rgba(255, 255, 255, 0.04)" stroke-width="0.75">
+      <line x1="170" y1="120" x2="170" y2="320" />
+      <line x1="190" y1="120" x2="190" y2="320" />
+      <line x1="210" y1="120" x2="210" y2="320" />
+      <line x1="230" y1="120" x2="230" y2="320" />
+      <line x1="250" y1="120" x2="250" y2="320" />
+      <line x1="270" y1="120" x2="270" y2="320" />
+      <line x1="290" y1="120" x2="290" y2="320" />
+      <line x1="310" y1="120" x2="310" y2="320" />
+      <line x1="330" y1="120" x2="330" y2="320" />
+    </g>
+
+    <!-- FINDER PATTERN 1: Top-Left -->
+    <g>
+      <rect x="165" y="135" width="46" height="46" rx="7" fill="none" stroke="#00f0ff" stroke-width="3.5" />
+      <rect x="171" y="141" width="34" height="34" rx="4" fill="#0a1222" />
+      <rect x="176" y="146" width="24" height="24" rx="4" fill="#00f0ff" />
+    </g>
+
+    <!-- FINDER PATTERN 2: Top-Right -->
+    <g>
+      <rect x="289" y="135" width="46" height="46" rx="7" fill="none" stroke="#00f0ff" stroke-width="3.5" />
+      <rect x="295" y="141" width="34" height="34" rx="4" fill="#0a1222" />
+      <rect x="300" y="146" width="24" height="24" rx="4" fill="#00f0ff" />
+    </g>
+
+    <!-- FINDER PATTERN 3: Bottom-Left -->
+    <g>
+      <rect x="165" y="259" width="46" height="46" rx="7" fill="none" stroke="#00f0ff" stroke-width="3.5" />
+      <rect x="171" y="265" width="34" height="34" rx="4" fill="#0a1222" />
+      <rect x="176" y="270" width="24" height="24" rx="4" fill="#00f0ff" />
+    </g>
+
+    <!-- ALIGNMENT PATTERN: Bottom-Right -->
+    <g>
+      <rect x="287" y="257" width="26" height="26" rx="4" fill="none" stroke="#38bdf8" stroke-width="2" />
+      <rect x="295" y="265" width="10" height="10" rx="2" fill="#38bdf8" />
+    </g>
+
+    <!-- TIMING PATTERNS (Horizontal & Vertical) -->
+    <!-- Horizontal track between finders at y=158 -->
+    <g fill="#38bdf8">
+      <circle cx="221" cy="158" r="2.5" />
+      <circle cx="233" cy="158" r="2.5" fill="#00f0ff" />
+      <circle cx="245" cy="158" r="2.5" />
+      <circle cx="257" cy="158" r="2.5" fill="#00f0ff" />
+      <circle cx="269" cy="158" r="2.5" />
+      <circle cx="279" cy="158" r="2.5" />
+    </g>
+    <!-- Vertical track between finders at x=188 -->
+    <g fill="#38bdf8">
+      <circle cx="188" cy="191" r="2.5" fill="#00f0ff" />
+      <circle cx="188" cy="203" r="2.5" />
+      <circle cx="188" cy="215" r="2.5" fill="#00f0ff" />
+      <circle cx="188" cy="227" r="2.5" />
+      <circle cx="188" cy="239" r="2.5" fill="#00f0ff" />
+      <circle cx="188" cy="249" r="2.5" />
+    </g>
+
+    <!-- DATA MODULE CLUSTERS (Cyber Cyan, Sky Blue, Crisp White) -->
+    <g rx="2">
+      <!-- Upper Center Cluster -->
+      <rect x="220" y="170" width="9" height="9" rx="2" fill="#00f0ff" />
+      <rect x="232" y="170" width="9" height="9" rx="2" fill="#f8fafc" />
+      <rect x="254" y="170" width="18" height="9" rx="2" fill="#38bdf8" />
+      <rect x="220" y="182" width="18" height="9" rx="2" fill="#38bdf8" />
+      <rect x="242" y="182" width="9" height="9" rx="2" fill="#00f0ff" />
+      <rect x="264" y="182" width="9" height="9" rx="2" fill="#f8fafc" />
+
+      <!-- Center Data Core -->
+      <rect x="204" y="200" width="9" height="18" rx="2" fill="#00f0ff" />
+      <rect x="216" y="200" width="9" height="9" rx="2" fill="#f8fafc" />
+      <rect x="228" y="209" width="18" height="9" rx="2" fill="#38bdf8" />
+      <rect x="252" y="200" width="9" height="9" rx="2" fill="#00f0ff" />
+      <rect x="264" y="200" width="18" height="9" rx="2" fill="#38bdf8" />
+      <rect x="286" y="200" width="9" height="18" rx="2" fill="#00f0ff" />
+
+      <rect x="216" y="222" width="18" height="9" rx="2" fill="#38bdf8" />
+      <rect x="238" y="222" width="9" height="9" rx="2" fill="#f8fafc" />
+      <rect x="250" y="222" width="18" height="9" rx="2" fill="#00f0ff" />
+      <rect x="272" y="222" width="9" height="9" rx="2" fill="#38bdf8" />
+
+      <!-- Lower Right Cluster -->
+      <rect x="224" y="242" width="9" height="9" rx="2" fill="#f8fafc" />
+      <rect x="236" y="242" width="18" height="9" rx="2" fill="#00f0ff" />
+      <rect x="258" y="242" width="9" height="18" rx="2" fill="#38bdf8" />
+      <rect x="270" y="242" width="9" height="9" rx="2" fill="#f8fafc" />
+      <rect x="224" y="254" width="18" height="9" rx="2" fill="#38bdf8" />
+      <rect x="246" y="254" width="9" height="9" rx="2" fill="#00f0ff" />
+
+      <rect x="224" y="272" width="9" height="18" rx="2" fill="#00f0ff" />
+      <rect x="236" y="281" width="18" height="9" rx="2" fill="#f8fafc" />
+      <rect x="258" y="272" width="18" height="9" rx="2" fill="#38bdf8" />
+      <rect x="318" y="257" width="9" height="9" rx="2" fill="#00f0ff" />
+      <rect x="318" y="272" width="9" height="18" rx="2" fill="#38bdf8" />
+    </g>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- ACTIVE SCANNING LASER EFFECT                                      -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- Scanning Aura / Glow Beam -->
+    <rect x="150" y="210" width="200" height="20" fill="url(#scanGlowGrad)" />
+    <!-- Bright Laser Line -->
+    <line x1="145" y1="220" x2="355" y2="220" stroke="url(#scanLaserGrad)" stroke-width="2.5" />
+    <circle cx="250" cy="220" r="3" fill="#ffffff" filter="url(#cyanGlowEffect)" />
+  </g>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- SECURITY EMBLEM / CREST AT SHIELD APEX                                -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <g transform="translate(0, 0)">
+    <!-- Base Medallion -->
+    <circle cx="250" cy="355" r="22" fill="#071324" stroke="#00f0ff" stroke-width="2" filter="url(#shieldShadow)" />
+    <!-- Inner Lock / Verified Check Icon -->
+    <path d="M 241,355 L 247,361 L 260,348" fill="none" stroke="#00f0ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+
+  <!-- Lower Status Pill: Security Telemetry -->
+  <g transform="translate(250, 404)">
+    <rect x="-86" y="-12" width="172" height="24" rx="12" fill="#0b1728" stroke="rgba(0, 240, 255, 0.4)" stroke-width="1" />
+    <circle cx="-68" cy="0" r="4" fill="#00f0ff" />
+    <text x="-56" y="4" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#f8fafc" letter-spacing="0.5">HEURISTIC VERIFIED</text>
+  </g>
+</svg>

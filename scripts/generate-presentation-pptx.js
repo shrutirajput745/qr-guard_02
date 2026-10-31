@@ -69,8 +69,9 @@ async function createPresentation() {
   }
 
   // ==========================================================================
-  // SLIDE 1 — COVER
-  // Title: QR Guard | Tagline: Scan Smart. Think Safe.
+  // SLIDE 1 — COVER (Redesigned Premium Hero Slide)
+  // Two-column layout: Title, Tagline, Description & Academic Metadata (Left)
+  // Hero Cybersecurity Shield & QR Visual (Right)
   // ==========================================================================
   {
     const slide = pptx.addSlide();
@@ -79,97 +80,133 @@ async function createPresentation() {
       fill: { color: THEME.bgDark }
     });
 
-    // Main Card Wrapper
+    // Main Card Surface
     slide.addShape(pptx.ShapeType.roundRect, {
-      x: 0.8, y: 0.8, w: 11.7, h: 5.9,
-      rectRadius: 0.18,
+      x: 0.8, y: 0.6, w: 11.73, h: 6.3,
+      rectRadius: 0.16,
       fill: { color: THEME.cardBg },
       line: { color: THEME.cardBorder, width: 1.2 }
     });
 
-    // Left Column: Visual QR Identity & Description
-    // QR-inspired stylized graphic box
+    // ── LEFT COLUMN: Text Hierarchy & Academic Details ───────────────────────
+
+    // Eyebrow Tag: Project Presentation
     slide.addShape(pptx.ShapeType.roundRect, {
-      x: 1.3, y: 1.3, w: 1.6, h: 1.6,
-      rectRadius: 0.12,
-      fill: { color: '071E36' },
-      line: { color: THEME.cyan, width: 1.8 }
+      x: 1.2, y: 0.95, w: 2.7, h: 0.34,
+      rectRadius: 0.08,
+      fill: { color: '0A2038' },
+      line: { color: THEME.cyan, width: 0.9 }
     });
-    // Inner QR finder markers simulation
-    slide.addShape(pptx.ShapeType.roundRect, {
-      x: 1.5, y: 1.5, w: 0.5, h: 0.5,
-      rectRadius: 0.04,
-      fill: { color: THEME.cyan }
-    });
-    slide.addShape(pptx.ShapeType.roundRect, {
-      x: 2.2, y: 1.5, w: 0.5, h: 0.5,
-      rectRadius: 0.04,
-      fill: { color: THEME.blueLight }
-    });
-    slide.addShape(pptx.ShapeType.roundRect, {
-      x: 1.5, y: 2.2, w: 0.5, h: 0.5,
-      rectRadius: 0.04,
-      fill: { color: THEME.emerald }
+    slide.addText('PROJECT PRESENTATION', {
+      x: 1.2, y: 0.95, w: 2.7, h: 0.34,
+      fontSize: 9.5, bold: true, color: THEME.cyan,
+      align: 'center', valign: 'middle'
     });
 
-    // Title & Tagline
+    // Main Title: QR Guard
     slide.addText('QR Guard', {
-      x: 3.2, y: 1.25, w: 8.8, h: 0.85,
-      fontSize: 42, bold: true, color: THEME.textLight
+      x: 1.15, y: 1.4, w: 6.0, h: 0.95,
+      fontSize: 46, bold: true, color: THEME.textLight,
+      valign: 'middle'
     });
 
+    // Tagline: Scan Smart. Think Safe.
     slide.addText('Scan Smart. Think Safe.', {
-      x: 3.2, y: 2.1, w: 8.8, h: 0.45,
-      fontSize: 18, bold: true, color: THEME.cyan
+      x: 1.2, y: 2.38, w: 6.0, h: 0.45,
+      fontSize: 18, bold: true, color: THEME.cyan,
+      valign: 'middle'
     });
 
-    slide.addText('An intelligent client-side QR scanner and heuristic URL security analyzer that inspects embedded content, flags deceptive web patterns, and safeguards users before navigation.', {
-      x: 3.2, y: 2.65, w: 8.8, h: 0.7,
-      fontSize: 12.5, color: THEME.textMuted
+    // Short Project Description
+    slide.addText('A smarter approach to QR code analysis, content understanding, and security awareness.', {
+      x: 1.2, y: 2.9, w: 5.8, h: 0.7,
+      fontSize: 13, color: THEME.textMuted,
+      lineSpacingMultiple: 1.2
     });
 
-    // Horizontal Accent Line
-    slide.addShape(pptx.ShapeType.line, {
-      x: 1.3, y: 3.65, w: 10.7, h: 0,
-      line: { color: THEME.cardBorder, width: 1 }
-    });
-
-    // Metadata Section: Editable Placeholders for College Evaluation
-    const metaBoxes = [
+    // Academic Metadata: Understated, Clean Placeholders
+    const academicBoxes = [
       {
-        title: 'STUDENT DETAILS',
-        lines: ['Student Name: [Student Name / Group Members]', 'Roll Number: [Roll No / PRN]'],
-        x: 1.3
+        label: 'PRESENTED BY',
+        value: '[Student Name(s)]',
+        sub: 'Roll No: [PRN / Roll Numbers]',
+        y: 3.8
       },
       {
-        title: 'COURSE & DEPARTMENT',
-        lines: ['Program: B.E. / B.Tech Computer Engineering', 'Department: Computer Science & Engineering'],
-        x: 4.9
+        label: 'DEPARTMENT / COURSE',
+        value: '[Course or Department]',
+        sub: 'B.E. / B.Tech Computer Engineering',
+        y: 4.6
       },
       {
-        title: 'ACADEMIC SUPERVISION',
-        lines: ['Faculty Guide: [Guide / Professor Name]', 'Evaluation: Academic Capstone Project'],
-        x: 8.5
+        label: 'GUIDED BY',
+        value: '[Faculty Name]',
+        sub: 'Academic Project Evaluation Guide',
+        y: 5.4
       }
     ];
 
-    metaBoxes.forEach(box => {
+    academicBoxes.forEach(box => {
+      // Row Background Pill
       slide.addShape(pptx.ShapeType.roundRect, {
-        x: box.x, y: 3.9, w: 3.5, h: 2.3,
-        rectRadius: 0.1,
+        x: 1.2, y: box.y, w: 5.8, h: 0.7,
+        rectRadius: 0.06,
         fill: { color: THEME.innerCard },
-        line: { color: THEME.cardBorder, width: 1 }
+        line: { color: THEME.cardBorder, width: 0.8 }
       });
 
-      slide.addText(box.title, {
-        x: box.x + 0.2, y: 4.1, w: 3.1, h: 0.3,
-        fontSize: 10.5, bold: true, color: THEME.blueLight
+      // Cyan Accent Bar on Left
+      slide.addShape(pptx.ShapeType.roundRect, {
+        x: 1.2, y: box.y, w: 0.08, h: 0.7,
+        rectRadius: 0.02,
+        fill: { color: THEME.cyan }
       });
 
-      slide.addText(box.lines.join('\n\n'), {
-        x: box.x + 0.2, y: 4.5, w: 3.1, h: 1.4,
-        fontSize: 10, color: THEME.textLight
+      // Label & Value
+      slide.addText(box.label, {
+        x: 1.38, y: box.y + 0.08, w: 3.0, h: 0.22,
+        fontSize: 8.5, bold: true, color: THEME.blueLight
       });
+      slide.addText(box.value, {
+        x: 1.38, y: box.y + 0.3, w: 3.2, h: 0.32,
+        fontSize: 11, bold: true, color: THEME.textLight
+      });
+      slide.addText(box.sub, {
+        x: 4.4, y: box.y + 0.18, w: 2.5, h: 0.35,
+        fontSize: 9, color: THEME.textMuted, align: 'right'
+      });
+    });
+
+    // ── RIGHT COLUMN: Hero Cybersecurity Shield & QR Visual ──────────────────
+
+    // Container Background for Hero Visual
+    slide.addShape(pptx.ShapeType.roundRect, {
+      x: 7.3, y: 0.95, w: 4.85, h: 5.15,
+      rectRadius: 0.12,
+      fill: { color: '071120' },
+      line: { color: THEME.cardBorder, width: 1 }
+    });
+
+    // Vector Hero Shield Graphic
+    const heroSvgPath = path.join(__dirname, '..', 'public', 'images', 'qr-guard-hero-shield.svg');
+    if (fs.existsSync(heroSvgPath)) {
+      slide.addImage({
+        path: heroSvgPath,
+        x: 7.55, y: 1.1, w: 4.35, h: 4.35
+      });
+    }
+
+    // Telemetry Status Badge Below Graphic
+    slide.addShape(pptx.ShapeType.roundRect, {
+      x: 8.1, y: 5.45, w: 3.25, h: 0.38,
+      rectRadius: 0.08,
+      fill: { color: '0B1B32' },
+      line: { color: THEME.cyan, width: 0.8 }
+    });
+    slide.addText('ZERO-TRUST PRE-NAVIGATION INSPECTION', {
+      x: 8.1, y: 5.45, w: 3.25, h: 0.38,
+      fontSize: 8.5, bold: true, color: THEME.cyan,
+      align: 'center', valign: 'middle'
     });
   }
 

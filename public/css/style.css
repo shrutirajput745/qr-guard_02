@@ -1571,6 +1571,191 @@ body {
   display: block;
 }
 
+/* ── KEYFRAME ANIMATIONS ─────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 8px var(--accent-cyan); }
+  50% { opacity: 0.55; transform: scale(0.85); box-shadow: 0 0 2px var(--accent-cyan); }
+}
+
+/* ── SLIDE 1: Hero Cover Slide Redesign ───────────────────────────────────── */
+#slide-0 {
+  padding: 32px 38px;
+}
+.pres-cover-container {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 36px;
+  align-items: center;
+  min-height: 480px;
+}
+.pres-cover-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: left;
+}
+.pres-cover-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  letter-spacing: 0.8px;
+  width: fit-content;
+  margin-bottom: 14px;
+}
+.pres-eyebrow-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 8px var(--accent-cyan);
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+.pres-cover-title {
+  font-size: clamp(2.8rem, 4.5vw, 4.2rem);
+  font-weight: 900;
+  color: var(--text-main);
+  line-height: 1.05;
+  letter-spacing: -1.2px;
+  margin: 0 0 10px 0;
+}
+.pres-cover-tagline {
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.3;
+  margin-bottom: 14px;
+}
+.pres-cover-tagline .tagline-cyan {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 18px rgba(0, 240, 255, 0.35);
+}
+.pres-cover-desc {
+  font-size: 1.02rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  max-width: 540px;
+  margin-bottom: 24px;
+}
+.pres-academic-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.pres-academic-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-left: 2px solid var(--accent-cyan);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+.pres-academic-item:hover {
+  border-color: rgba(0, 240, 255, 0.4);
+  transform: translateY(-2px);
+}
+.pres-academic-item .academic-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pres-academic-item .academic-val {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pres-cover-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.pres-cover-right {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+.pres-hero-visual-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+}
+.pres-hero-svg {
+  width: 100%;
+  max-height: 440px;
+  height: auto;
+  filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.65));
+  transition: transform 0.4s ease;
+}
+.pres-hero-visual-card:hover .pres-hero-svg {
+  transform: scale(1.02);
+}
+.pres-hero-badge-float {
+  margin-top: -8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: rgba(9, 14, 26, 0.95);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+}
+.pres-hero-badge-float i {
+  color: var(--accent-cyan);
+}
+
+@media (max-width: 960px) {
+  .pres-cover-container {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    text-align: center;
+  }
+  .pres-cover-left {
+    align-items: center;
+    text-align: center;
+  }
+  .pres-academic-strip {
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width: 420px;
+  }
+  .pres-cover-actions {
+    justify-content: center;
+  }
+}
+
 /* Slide Typography & Layouts */
 .slide-header {
   margin-bottom: 22px;

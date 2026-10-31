@@ -1183,47 +1183,69 @@
         <!-- Master Presentation Deck (9 Clean Slides) -->
         <div class="presentation-deck-card" id="presentationDeck">
 
-          <!-- ── SLIDE 1: Cover Slide ── -->
+          <!-- ── SLIDE 1: Cover Slide (Redesigned Premium Hero Slide) ── -->
           <div class="presentation-slide active" id="slide-0">
-            <div class="pres-title-hero" style="position:relative;">
-              <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 16px; border-radius:20px; background:rgba(0, 240, 255, 0.1); border:1px solid rgba(0, 240, 255, 0.3); color:var(--accent-blue); font-size:0.8rem; font-weight:700; margin-bottom:12px;">
-                <i class="fa-solid fa-shield-halved"></i> CYBERSECURITY CAPSTONE PROJECT
-              </div>
-              <h1 style="font-size:2.8rem; font-weight:800; color:var(--text-main); margin-bottom:6px; letter-spacing:-0.5px;">QR GUARD</h1>
-              <p class="pres-title-sub" style="font-size:1.35rem; font-weight:700; color:var(--accent-blue); margin-bottom:12px;">
-                Scan Smart. Think Safe.
-              </p>
-              <p class="pres-title-desc" style="max-width:760px; margin:0 auto 20px; font-size:0.95rem; line-height:1.6; color:var(--text-muted);">
-                An intelligent client-side QR scanner and heuristic URL security analyzer that inspects embedded content, flags deceptive web patterns, and safeguards users before navigation.
-              </p>
+            <div class="pres-cover-container">
+              
+              <!-- ── LEFT COLUMN: Text Hierarchy & Academic Details ── -->
+              <div class="pres-cover-left">
+                <!-- Eyebrow Tag -->
+                <div class="pres-cover-eyebrow">
+                  <span class="pres-eyebrow-dot"></span>
+                  <i class="fa-solid fa-shield-halved"></i>
+                  <span>PROJECT PRESENTATION</span>
+                </div>
 
-              <!-- Academic Placeholders for College Evaluation Panel -->
-              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px; max-width:820px; margin:0 auto 22px; text-align:left;">
-                <div style="background:var(--bg-secondary); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border-color);">
-                  <div style="font-size:0.72rem; font-weight:700; color:var(--accent-blue); text-transform:uppercase;">Student Presenters</div>
-                  <div style="font-size:0.88rem; font-weight:600; color:var(--text-main); margin-top:2px;">[Student Names / Group]</div>
-                  <div style="font-size:0.75rem; color:var(--text-muted);">Roll No: [PRN / Roll Numbers]</div>
+                <!-- Main Project Title: Large, Bold, Dominant -->
+                <h1 class="pres-cover-title">QR Guard</h1>
+
+                <!-- Tagline with Cyan Highlighting -->
+                <div class="pres-cover-tagline">
+                  <span>Scan Smart.</span> <span class="tagline-cyan">Think Safe.</span>
                 </div>
-                <div style="background:var(--bg-secondary); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border-color);">
-                  <div style="font-size:0.72rem; font-weight:700; color:var(--accent-blue); text-transform:uppercase;">Department &amp; Program</div>
-                  <div style="font-size:0.88rem; font-weight:600; color:var(--text-main); margin-top:2px;">Computer Engineering</div>
-                  <div style="font-size:0.75rem; color:var(--text-muted);">B.E. / B.Tech Computer Science</div>
+
+                <!-- Concise Description -->
+                <p class="pres-cover-desc">
+                  A smarter approach to QR code analysis, content understanding, and security awareness.
+                </p>
+
+                <!-- Academic Credentials & Evaluation Metadata -->
+                <div class="pres-academic-strip">
+                  <div class="pres-academic-item">
+                    <div class="academic-label"><i class="fa-solid fa-user-graduate"></i> Presented by</div>
+                    <div class="academic-val">[Student Name(s)]</div>
+                  </div>
+                  <div class="pres-academic-item">
+                    <div class="academic-label"><i class="fa-solid fa-building-columns"></i> Department / Course</div>
+                    <div class="academic-val">[Course or Department]</div>
+                  </div>
+                  <div class="pres-academic-item">
+                    <div class="academic-label"><i class="fa-solid fa-chalkboard-user"></i> Guided by</div>
+                    <div class="academic-val">[Faculty Name]</div>
+                  </div>
                 </div>
-                <div style="background:var(--bg-secondary); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--border-color);">
-                  <div style="font-size:0.72rem; font-weight:700; color:var(--accent-blue); text-transform:uppercase;">Faculty Guide</div>
-                  <div style="font-size:0.88rem; font-weight:600; color:var(--text-main); margin-top:2px;">[Guide / Professor Name]</div>
-                  <div style="font-size:0.75rem; color:var(--text-muted);">Academic Project Evaluation</div>
+
+                <!-- Navigation & PPTX Download Actions -->
+                <div class="pres-cover-actions">
+                  <button class="btn btn-primary" onclick="window.QRPresentation.nextSlide()">
+                    <span>Start Presentation</span> <i class="fa-solid fa-arrow-right"></i>
+                  </button>
+                  <a href="/QR_Guard_Presentation.pptx" download="QR_Guard_Presentation.pptx" class="btn btn-outline" style="text-decoration:none;">
+                    <i class="fa-solid fa-file-powerpoint"></i> <span>Download .PPTX</span>
+                  </a>
                 </div>
               </div>
 
-              <div style="display:flex; justify-content:center; gap:14px; align-items:center;">
-                <button class="btn btn-primary" onclick="window.QRPresentation.nextSlide()">
-                  Start Presentation <i class="fa-solid fa-arrow-right"></i>
-                </button>
-                <a href="/QR_Guard_Presentation.pptx" download="QR_Guard_Presentation.pptx" class="btn btn-outline" style="text-decoration:none;">
-                  <i class="fa-solid fa-file-powerpoint"></i> Download .PPTX Slides
-                </a>
+              <!-- ── RIGHT COLUMN: Hero Cybersecurity Shield & QR Visual ── -->
+              <div class="pres-cover-right">
+                <div class="pres-hero-visual-card">
+                  <img src="/images/qr-guard-hero-shield.svg" alt="QR Guard Cybersecurity Shield and QR Code" class="pres-hero-svg" />
+                  <div class="pres-hero-badge-float">
+                    <i class="fa-solid fa-shield-check"></i> Zero-Trust Pre-Navigation Inspection
+                  </div>
+                </div>
               </div>
+
             </div>
           </div>
 
