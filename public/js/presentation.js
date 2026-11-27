@@ -70,10 +70,13 @@ window.QRPresentation = (function() {
       const presPage = document.getElementById('page-presentation');
       if (!presPage || !presPage.classList.contains('active')) return;
 
+      const tag = e.target && e.target.tagName;
+      const isFormField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+      if (isFormField) return;
+
       if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
-        if (e.key === 'Space' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-          e.preventDefault();
-        }
+        if (e.key === ' ' && tag === 'BUTTON') return;
+        e.preventDefault();
         nextSlide();
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
         prevSlide();

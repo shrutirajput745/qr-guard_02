@@ -146,6 +146,9 @@ window.QRLiveDemo = (function() {
     const banner = document.getElementById('demoActiveBanner');
     if (banner) banner.style.display = 'flex';
 
+    const errorBox = document.getElementById('demoErrorBox');
+    if (errorBox) errorBox.style.display = 'none';
+
     // Generate scenario QR on canvas
     generateScenarioQR(scenario);
 
@@ -459,6 +462,9 @@ window.QRLiveDemo = (function() {
 
     const resultCard = document.getElementById('demoResultCard');
     if (resultCard) resultCard.style.display = 'none';
+
+    const errorBox = document.getElementById('demoErrorBox');
+    if (errorBox) errorBox.style.display = 'none';
 
     const origCanvas = document.getElementById('demoOriginalCanvas');
     if (origCanvas) {

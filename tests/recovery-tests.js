@@ -95,6 +95,10 @@ async function runRecoveryTests() {
   assert(res4.success === false, 'Severely corrupted QR honestly reported as recovery failure');
   assert(!res4.text, 'No fabricated payload returned on corrupted QR');
 
+  // 8. Boundary guard: zero / empty pixel buffers do not divide by zero
+  const zeroQ = QRRecovery.estimateImageQualityFromData(new Uint8ClampedArray(0), 0, 0);
+  assert(zeroQ.blurScore === 0 && !Number.isNaN(zeroQ.contrast) && zeroQ.qualityLabel === 'Insufficient Data', 'Zero-dimension image quality check safely returns Insufficient Data');
+
   console.log('\n=====================================================');
   console.log(`Recovery Test Results: ${passed} Passed, ${failed} Failed out of ${passed + failed} Tests`);
   console.log('=====================================================');

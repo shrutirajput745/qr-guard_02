@@ -14,7 +14,19 @@ try {
   const recoveryTestPath = path.join(__dirname, 'recovery-tests.js');
   execSync(`node "${recoveryTestPath}"`, { stdio: 'inherit' });
 
-  console.log('\n▶ [3/3] Running Backend API & Server Integration Tests...');
+  console.log('\n▶ [3/5] Running QR Trust Fingerprint & Visual Integrity Tests...');
+  const integrityTestPath = path.join(__dirname, 'integrity-tests.js');
+  execSync(`node "${integrityTestPath}"`, { stdio: 'inherit' });
+
+  console.log('\n▶ [4/5] Running QR Behavior Sandbox Tests...');
+  const sandboxTestPath = path.join(__dirname, 'sandbox-tests.js');
+  execSync(`node "${sandboxTestPath}"`, { stdio: 'inherit' });
+
+  console.log('\n▶ [5/6] Running DOM Integrity & UI Structure Tests...');
+  const uiTestPath = path.join(__dirname, 'ui-tests.js');
+  execSync(`node "${uiTestPath}"`, { stdio: 'inherit' });
+
+  console.log('\n▶ [6/6] Running Backend API & Server Integration Tests...');
   const apiTestPath = path.join(__dirname, 'api-tests.js');
   execSync(`node "${apiTestPath}"`, { stdio: 'inherit' });
 
