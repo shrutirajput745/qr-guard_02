@@ -65,11 +65,21 @@ window.QRScanner = {
       this.isScanning = true;
       const startBtn = document.getElementById('startCamBtn');
       const stopBtn = document.getElementById('stopCamBtn');
+      const camBadge = document.getElementById('camStatusBadge');
       if (startBtn) startBtn.style.display = 'none';
       if (stopBtn) stopBtn.style.display = 'inline-flex';
+      if (camBadge) {
+        camBadge.className = 'cam-status-badge active';
+        camBadge.innerHTML = '<i class="fa-solid fa-circle"></i> SCANNING ACTIVE';
+      }
     }).catch(err => {
       console.warn("Camera access failed or denied:", err);
       this.stopCamera();
+      const camBadge = document.getElementById('camStatusBadge');
+      if (camBadge) {
+        camBadge.className = 'cam-status-badge error';
+        camBadge.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> CAMERA UNAVAILABLE';
+      }
       if (this.onScanErrorCallback) {
         this.onScanErrorCallback("Camera access unavailable or denied by browser. You can test using Image Upload or Demo Samples.");
       }
@@ -80,6 +90,7 @@ window.QRScanner = {
     const startBtn = document.getElementById('startCamBtn');
     const stopBtn = document.getElementById('stopCamBtn');
     const overlay = document.getElementById('scannerOverlay');
+    const camBadge = document.getElementById('camStatusBadge');
 
     if (this.html5QrcodeScanner && this.isScanning) {
       this.html5QrcodeScanner.stop().then(() => {
@@ -87,11 +98,19 @@ window.QRScanner = {
         if (startBtn) startBtn.style.display = 'inline-flex';
         if (stopBtn) stopBtn.style.display = 'none';
         if (overlay) overlay.style.display = 'none';
+        if (camBadge) {
+          camBadge.className = 'cam-status-badge';
+          camBadge.innerHTML = '<i class="fa-solid fa-circle"></i> STANDBY';
+        }
       }).catch(err => console.error("Failed to stop scanner:", err));
     } else {
       if (startBtn) startBtn.style.display = 'inline-flex';
       if (stopBtn) stopBtn.style.display = 'none';
       if (overlay) overlay.style.display = 'none';
+      if (camBadge) {
+        camBadge.className = 'cam-status-badge';
+        camBadge.innerHTML = '<i class="fa-solid fa-circle"></i> STANDBY';
+      }
     }
   },
 

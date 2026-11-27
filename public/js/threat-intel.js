@@ -9,6 +9,7 @@ window.QRThreatIntel = (function() {
   const MAX_RECORDS = 100;
 
   let activeFilter = 'all';
+  let activeSearch = '';
   let selectedRecordId = null;
 
   function escapeHtml(str) {
@@ -247,6 +248,11 @@ window.QRThreatIntel = (function() {
     }
 
     const sevBar = totalInd > 0 ? `
+      <div class="ti-severity-bar-track" aria-label="Severity distribution">
+        <div class="ti-sev-seg high" style="width:${Math.round((severityCounts.high / totalInd) * 100)}%" title="High: ${severityCounts.high}"></div>
+        <div class="ti-sev-seg medium" style="width:${Math.round((severityCounts.medium / totalInd) * 100)}%" title="Medium: ${severityCounts.medium}"></div>
+        <div class="ti-sev-seg low" style="width:${Math.round((severityCounts.low / totalInd) * 100)}%" title="Low: ${severityCounts.low}"></div>
+      </div>
       <div class="ti-severity-summary">
         <span class="ti-sev-pill high"><i class="fa-solid fa-circle-exclamation"></i> High: ${severityCounts.high}</span>
         <span class="ti-sev-pill medium"><i class="fa-solid fa-triangle-exclamation"></i> Medium: ${severityCounts.medium}</span>
@@ -273,9 +279,15 @@ window.QRThreatIntel = (function() {
     if (!container) return;
 
     const filtered = records.filter(r => {
-      if (activeFilter === 'all') return true;
-      if (activeFilter === 'flagged') return r.status === 'Dangerous' || r.status === 'Suspicious';
-      return r.status.toLowerCase() === activeFilter;
+      if (activeFilter === 'flagged' && r.status !== 'Dangerous' && r.status !== 'Suspicious') return false;
+      if (activeFilter !== 'all' && activeFilter !== 'flagged' && r.status.toLowerCase() !== activeFilter) return false;
+      if (activeSearch) {
+        const indText = (r.detectedIndicators || []).map(i => `${i.title || ''} ${i.reason || ''}`).join(' ');
+        const decodedHost = r.forensics && r.forensics.decodedHostname ? r.forensics.decodedHostname : '';
+        const hay = `${r.input} ${decodedHost} ${(r.threatCategories || []).join(' ')} ${indText} ${r.status}`.toLowerCase();
+        if (!hay.includes(activeSearch)) return false;
+      }
+      return true;
     });
 
     if (filtered.length === 0) {
@@ -486,7 +498,7 @@ window.QRThreatIntel = (function() {
       });
     }
 
-    document.querySelectorAll('.ti-preset-btn').forEach(btn => {
+    document.querySelectorAll('#page-threat-intel .ti-preset-btn[data-url]').forEach(btn => {
       btn.addEventListener('click', () => {
         const sample = btn.getAttribute('data-url') || '';
         if (investigateInput) investigateInput.value = sample;
@@ -502,6 +514,14 @@ window.QRThreatIntel = (function() {
         renderRecentFeed(loadRecords());
       });
     });
+
+    const searchInput = document.getElementById('tiSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        activeSearch = (e.target.value || '').trim().toLowerCase();
+        renderRecentFeed(loadRecords());
+      });
+    }
 
     const clearBtn = document.getElementById('tiClearTelemetryBtn');
     if (clearBtn) {

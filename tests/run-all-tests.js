@@ -22,7 +22,11 @@ try {
   const sandboxTestPath = path.join(__dirname, 'sandbox-tests.js');
   execSync(`node "${sandboxTestPath}"`, { stdio: 'inherit' });
 
-  console.log('\n▶ [5/5] Running Backend API & Server Integration Tests...');
+  console.log('\n▶ [5/6] Running DOM Integrity & UI Structure Tests...');
+  const uiTestPath = path.join(__dirname, 'ui-tests.js');
+  execSync(`node "${uiTestPath}"`, { stdio: 'inherit' });
+
+  console.log('\n▶ [6/6] Running Backend API & Server Integration Tests...');
   const apiTestPath = path.join(__dirname, 'api-tests.js');
   execSync(`node "${apiTestPath}"`, { stdio: 'inherit' });
 

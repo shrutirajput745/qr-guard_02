@@ -66,6 +66,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Page Navigation ────────────────────────────────────────────────────
   const pageNavBtns = document.querySelectorAll('.page-nav-btn');
   const pageContents = document.querySelectorAll('.page-content');
+  const socShell = document.getElementById('socShell');
+  const crumbEl = document.getElementById('socActiveCrumb');
+
+  const PAGE_LABELS = {
+    scanner: 'UNIVERSAL SCANNER',
+    'threat-intel': 'THREAT INTELLIGENCE',
+    integrity: 'QR INTEGRITY LAB',
+    sandbox: 'BEHAVIOR SANDBOX',
+    recovery: 'BLUR RECOVERY LAB',
+    history: 'SCAN HISTORY',
+    demo: 'LIVE DEMO LAB',
+    architecture: 'SYSTEM ARCHITECTURE',
+    presentation: 'PROJECT PRESENTATION'
+  };
 
   pageNavBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -75,6 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.add('active');
       const activePage = document.getElementById(`page-${targetPage}`);
       if (activePage) activePage.classList.add('active');
+
+      if (crumbEl) {
+        crumbEl.textContent = PAGE_LABELS[targetPage] || targetPage.toUpperCase();
+      }
+      if (socShell) {
+        socShell.classList.remove('mobile-nav-open');
+      }
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 
       // Stop camera when leaving scanner
       if (targetPage !== 'scanner' && window.QRScanner) {
@@ -174,6 +196,98 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.QRSandboxUI) {
     window.QRSandboxUI.init();
   }
+
+  // ── SOC Shell Controls: Sidebar, Mobile Drawer, Status Strip & Settings ──
+  const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+  if (sidebarToggleBtn && socShell) {
+    const savedCollapse = localStorage.getItem('qrguard_sidebar_collapsed') === '1';
+    if (savedCollapse) {
+      socShell.classList.add('sidebar-collapsed');
+      sidebarToggleBtn.setAttribute('aria-expanded', 'false');
+      sidebarToggleBtn.innerHTML = '<i class="fa-solid fa-angles-right"></i>';
+    }
+    sidebarToggleBtn.addEventListener('click', () => {
+      const collapsed = socShell.classList.toggle('sidebar-collapsed');
+      localStorage.setItem('qrguard_sidebar_collapsed', collapsed ? '1' : '0');
+      sidebarToggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      sidebarToggleBtn.innerHTML = collapsed
+        ? '<i class="fa-solid fa-angles-right"></i>'
+        : '<i class="fa-solid fa-angles-left"></i>';
+    });
+  }
+
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+  if (mobileMenuBtn && socShell) {
+    mobileMenuBtn.addEventListener('click', () => {
+      socShell.classList.toggle('mobile-nav-open');
+    });
+  }
+  if (sidebarBackdrop && socShell) {
+    sidebarBackdrop.addEventListener('click', () => {
+      socShell.classList.remove('mobile-nav-open');
+    });
+  }
+
+  // Settings Modal & Real Preferences
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsModal = document.getElementById('socSettingsModal');
+  const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+  const modalThemeBtn = document.getElementById('modalThemeBtn');
+  const compactModeToggle = document.getElementById('compactModeToggle');
+  const reducedMotionToggle = document.getElementById('reducedMotionToggle');
+
+  if (localStorage.getItem('qrguard_compact') === '1') {
+    document.body.classList.add('soc-compact');
+    if (compactModeToggle) compactModeToggle.checked = true;
+  }
+  if (localStorage.getItem('qrguard_reduced_motion') === '1') {
+    document.body.classList.add('soc-reduced-motion');
+    if (reducedMotionToggle) reducedMotionToggle.checked = true;
+  }
+
+  if (settingsBtn && settingsModal) {
+    settingsBtn.addEventListener('click', () => settingsModal.classList.add('open'));
+  }
+  if (closeSettingsBtn && settingsModal) {
+    closeSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('open'));
+  }
+  if (settingsModal) {
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) settingsModal.classList.remove('open');
+    });
+  }
+  if (modalThemeBtn && themeToggleBtn) {
+    modalThemeBtn.addEventListener('click', () => themeToggleBtn.click());
+  }
+  if (compactModeToggle) {
+    compactModeToggle.addEventListener('change', (e) => {
+      document.body.classList.toggle('soc-compact', e.target.checked);
+      localStorage.setItem('qrguard_compact', e.target.checked ? '1' : '0');
+    });
+  }
+  if (reducedMotionToggle) {
+    reducedMotionToggle.addEventListener('change', (e) => {
+      document.body.classList.toggle('soc-reduced-motion', e.target.checked);
+      localStorage.setItem('qrguard_reduced_motion', e.target.checked ? '1' : '0');
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (settingsModal && settingsModal.classList.contains('open')) settingsModal.classList.remove('open');
+      if (socShell && socShell.classList.contains('mobile-nav-open')) socShell.classList.remove('mobile-nav-open');
+    }
+  });
+
+  // Real Engine Status Strip Sync
+  const setStatusText = (id, ok, okTxt, errTxt) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = ok ? okTxt : errTxt;
+  };
+  setStatusText('statusEngineVal', Boolean(window.QRAnalyzer), 'ONLINE', 'OFFLINE');
+  setStatusText('statusIntelVal', Boolean(window.QRThreatIntel), 'ACTIVE', 'DISABLED');
+  setStatusText('statusIntegrityVal', Boolean(window.QRIntegrityEngine), 'READY', 'UNAVAILABLE');
+  setStatusText('statusSandboxVal', Boolean(window.QRBehaviorSandbox), 'CONTAINED', 'OFFLINE');
 
   if (window.QRArchitecture) {
     window.QRArchitecture.init();
@@ -357,10 +471,30 @@ document.addEventListener('DOMContentLoaded', () => {
       if (meterPointer) meterPointer.style.left   = `${result.score}%`;
     }, 50);
 
-    // 4. Extracted Payload
+    // 4. Extracted Payload (Safe DOM Syntax Highlighting for URLs)
     const extractedPayload = document.getElementById('extractedPayload');
     const payloadType = document.getElementById('payloadType');
-    if (extractedPayload) extractedPayload.textContent = result.input;
+    if (extractedPayload) {
+      extractedPayload.innerHTML = '';
+      if (result.isUrl && result.forensics && /^(https?|ftp):\/\//i.test(result.input)) {
+        const f = result.forensics;
+        const addSpan = (cls, txt) => {
+          if (!txt) return;
+          const sp = document.createElement('span');
+          if (cls) sp.className = cls;
+          sp.textContent = txt;
+          extractedPayload.appendChild(sp);
+        };
+        addSpan('tok-scheme', (f.protocol || '').toLowerCase() + '://');
+        addSpan('tok-host', f.rawHostname || f.hostname || '');
+        if (f.isExplicitPort && f.port) addSpan('tok-host', ':' + f.port);
+        addSpan('tok-path', f.path && f.path !== '/' ? f.path : (result.input.includes('/') ? '/' : ''));
+        if (result.details && result.details.search) addSpan('tok-query', result.details.search);
+        if (f.fragment) addSpan('tok-hash', f.fragment);
+      } else {
+        extractedPayload.textContent = result.input;
+      }
+    }
 
     const isExecScheme = /^(javascript:|data:|file:|vbscript:)/i.test(result.input);
     if (result.isUrl && !isExecScheme) {

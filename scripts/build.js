@@ -36,6 +36,7 @@ console.log('▶ [1/4] Checking Required Distribution Files...');
 checkFileExists('public/index.html');
 checkFileExists('public/css/style.css');
 checkFileExists('public/css/integrity.css');
+checkFileExists('public/css/soc-theme.css');
 checkFileExists('public/js/analyzer.js');
 checkFileExists('public/js/app.js');
 checkFileExists('public/js/scanner.js');

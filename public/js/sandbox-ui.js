@@ -62,6 +62,13 @@ window.QRSandboxUI = (function() {
     const effectsHtml = sim.sideEffects.map(e => `<li>${escapeHtml(e)}</li>`).join('');
     const recsHtml = sim.recommendations.map(r => `<li>${escapeHtml(r)}</li>`).join('');
 
+    const chainHtml = sim.timeline.map((step, idx) => `
+      ${idx > 0 ? '<span class="sb-chain-arrow"><i class="fa-solid fa-chevron-right"></i></span>' : ''}
+      <div class="sb-chain-node node-${escapeHtml(step.status)}">
+        <span>Stage ${step.stage}</span>
+        <strong>${escapeHtml(step.title)}</strong>
+      </div>`).join('');
+
     outEl.innerHTML = `
       <div class="il-status-banner il-status-${cls}" style="margin-bottom:18px;">
         <div class="il-status-left">
@@ -83,6 +90,8 @@ window.QRSandboxUI = (function() {
           </div>
         </div>
       </div>
+
+      <div class="sb-chain-wrap" aria-label="Hypothetical Execution Chain">${chainHtml}</div>
 
       <div class="ti-report-payload" style="margin-bottom:18px;">
         <span class="ti-sub-label">Simulated Payload (Inert — Zero Network / Zero Script Execution)</span>
