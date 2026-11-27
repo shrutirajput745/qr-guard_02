@@ -86,6 +86,11 @@ document.addEventListener('DOMContentLoaded', () => {
         window.QRHistory.renderHistory();
       }
 
+      // Render Threat Intelligence dashboard when navigating to it
+      if (targetPage === 'threat-intel' && window.QRThreatIntel) {
+        window.QRThreatIntel.renderDashboard();
+      }
+
       // Initialize Live Demo Lab scenario when navigating to it
       if (targetPage === 'demo' && window.QRLiveDemo) {
         window.QRLiveDemo.selectScenario('safe');
@@ -156,6 +161,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (window.QRLiveDemo) {
     window.QRLiveDemo.init();
+  }
+
+  if (window.QRThreatIntel) {
+    window.QRThreatIntel.init();
+  }
+
+  if (window.QRIntegrityLab) {
+    window.QRIntegrityLab.init();
+  }
+
+  if (window.QRSandboxUI) {
+    window.QRSandboxUI.init();
   }
 
   if (window.QRArchitecture) {
@@ -274,6 +291,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // Save to history (privacy-aware masking done inside history module)
       if (window.QRHistory) {
         window.QRHistory.addEntry(result);
+      }
+
+      // Record URL telemetry in Threat Intelligence dashboard
+      if (window.QRThreatIntel && result.isUrl) {
+        window.QRThreatIntel.recordAnalysis(result);
       }
 
       renderResults(result);
@@ -430,6 +452,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // 7B. URL Forensics & Threat Intelligence Breakdown
+    renderScannerForensics(result);
+
     // 8. Advice Box
     const adviceBox  = document.getElementById('adviceBox');
     const adviceIcon = document.getElementById('adviceIcon');
@@ -453,6 +478,86 @@ document.addEventListener('DOMContentLoaded', () => {
     // 10. Scroll to results on mobile
     if (window.innerWidth < 960) {
       document.getElementById('resultCard')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  // ── Render Scanner URL Forensics Panel ─────────────────────────────────
+  function renderScannerForensics(result) {
+    const panel = document.getElementById('scannerForensicsPanel');
+    const catsEl = document.getElementById('scannerThreatCategories');
+    const compsEl = document.getElementById('scannerHighlightedComponents');
+    const gridEl = document.getElementById('scannerForensicsGrid');
+    const deepBtn = document.getElementById('openInThreatIntelBtn');
+    if (!panel || !catsEl || !compsEl || !gridEl) return;
+
+    if (!result.isUrl || !result.forensics) {
+      panel.style.display = 'none';
+      return;
+    }
+
+    panel.style.display = 'block';
+    const f = result.forensics;
+
+    if (result.threatCategories && result.threatCategories.length > 0) {
+      catsEl.innerHTML = result.threatCategories
+        .map(c => `<span class="ti-threat-tag">${escapeHtml(c)}</span>`)
+        .join('');
+    } else {
+      catsEl.innerHTML = '<span class="ti-threat-tag clean">No Threat Categories Triggered</span>';
+    }
+
+    if (result.highlightedComponents && result.highlightedComponents.length > 0) {
+      compsEl.style.display = 'grid';
+      compsEl.innerHTML = result.highlightedComponents
+        .map(comp => `
+          <div class="ti-component-chip sev-${escapeHtml(comp.severity)}">
+            <span class="ti-comp-part">${escapeHtml(comp.part)}</span>
+            <code class="ti-comp-val">${escapeHtml(comp.value)}</code>
+            <span class="ti-comp-reason">${escapeHtml(comp.reason)}</span>
+          </div>`)
+        .join('');
+    } else {
+      compsEl.style.display = 'none';
+      compsEl.innerHTML = '';
+    }
+
+    const subdomainsText = (f.subdomains && f.subdomains.length > 0) ? f.subdomains.join('.') : 'None';
+    const encodedText = (f.encodedComponents && f.encodedComponents.length > 0) ? f.encodedComponents.join('; ') : 'None';
+    const paramsCount = (f.queryParams && f.queryParams.length) || 0;
+
+    gridEl.innerHTML = `
+      <div class="ti-forensic-cell"><span>Protocol</span><code>${escapeHtml(f.protocol || 'N/A')}</code></div>
+      <div class="ti-forensic-cell"><span>Hostname</span><code>${escapeHtml(f.hostname || 'N/A')}</code></div>
+      <div class="ti-forensic-cell"><span>Root Domain</span><code>${escapeHtml(f.rootDomain || 'N/A')}</code></div>
+      <div class="ti-forensic-cell"><span>Subdomains</span><code>${escapeHtml(subdomainsText)}</code></div>
+      <div class="ti-forensic-cell"><span>Port</span><code>${escapeHtml(f.port || 'N/A')}</code></div>
+      <div class="ti-forensic-cell"><span>Path</span><code>${escapeHtml(f.path || '/')}</code></div>
+      <div class="ti-forensic-cell"><span>Query Params</span><code>${paramsCount} parameter(s)</code></div>
+      <div class="ti-forensic-cell"><span>Fragment</span><code>${escapeHtml(f.fragment || 'None')}</code></div>
+      <div class="ti-forensic-cell"><span>Encoded Parts</span><code>${escapeHtml(encodedText)}</code></div>
+      <div class="ti-forensic-cell"><span>IDN / Punycode</span><code>${escapeHtml(f.decodedHostname || f.hostname || 'N/A')}</code></div>
+    `;
+
+    if (deepBtn) {
+      deepBtn.onclick = () => {
+        if (window.QRThreatIntel) {
+          const inputEl = document.getElementById('tiInvestigateInput');
+          if (inputEl) inputEl.value = result.input;
+          window.navigateToPage('threat-intel');
+        }
+      };
+    }
+
+    const sandboxBtn = document.getElementById('openInSandboxBtn');
+    if (sandboxBtn) {
+      sandboxBtn.onclick = () => {
+        if (window.QRSandboxUI) {
+          const sbInput = document.getElementById('sbPayloadInput');
+          if (sbInput) sbInput.value = result.input;
+          window.QRSandboxUI.runSimulation(result.input);
+          window.navigateToPage('sandbox');
+        }
+      };
     }
   }
 

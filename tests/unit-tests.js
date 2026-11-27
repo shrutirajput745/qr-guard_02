@@ -76,6 +76,98 @@ const testCases = [
   { name: 'Very long URL (length indicator)', input: 'https://example.com/' + 'a'.repeat(100), minScore: 10 },
   { name: 'Non-standard port', input: 'http://example.com:8080/login', minScore: 30 },
   { name: 'HTTPS App Store link is safe', input: 'https://apps.apple.com/us/app/myapp/id123456', expectStatus: 'Safe', maxScore: 10 },
+
+  // ── 10. Advanced Threat Intelligence & URL Forensics ──────────────────
+  { name: 'Homograph: Cyrillic "а" in paypal.com',
+    input: 'https://p\u0430ypal.com/login',
+    expectStatus: 'Dangerous', minScore: 70,
+    expectCategory: 'Homograph / IDN Spoofing' },
+  { name: 'Homograph: Mixed-script Apple with Cyrillic',
+    input: 'https://\u0430\u0440\u0440le.com',
+    expectStatus: 'Dangerous', minScore: 70,
+    expectCategory: 'Homograph / IDN Spoofing' },
+  { name: 'Homograph: Zero-width invisible Unicode character in hostname',
+    input: 'https://pay\u200Bpal.com',
+    expectStatus: 'Dangerous', minScore: 70,
+    expectCategory: 'Homograph / IDN Spoofing' },
+  { name: 'Punycode: xn--80ak6aa92e.com (Cyrillic apple spoof)',
+    input: 'https://xn--80ak6aa92e.com/signin',
+    expectStatus: 'Dangerous', minScore: 70,
+    expectCategory: 'Homograph / IDN Spoofing',
+    expectDecodedHostContains: '\u0430' },
+  { name: 'Punycode: All-Cyrillic IDN domain (xn--e1afmkfd.xn--p1ai)',
+    input: 'https://xn--e1afmkfd.xn--p1ai',
+    expectStatus: 'Suspicious', minScore: 30,
+    expectCategory: 'Homograph / IDN Spoofing' },
+  { name: 'Typosquatting: Visual substitution paypa1.com',
+    input: 'https://paypa1.com',
+    expectStatus: 'Suspicious', minScore: 30,
+    expectCategory: 'Typosquatting' },
+  { name: 'Typosquatting: Transposition payapl.com',
+    input: 'https://payapl.com',
+    expectStatus: 'Suspicious', minScore: 30,
+    expectCategory: 'Typosquatting' },
+  { name: 'Typosquatting: Insertion goggle.com + credential path',
+    input: 'https://goggle.com/login',
+    expectStatus: 'Suspicious', minScore: 45,
+    expectCategory: 'Typosquatting' },
+  { name: 'Deceptive Subdomain: Brand in subdomain + risky TLD',
+    input: 'https://paypal.com.account-verify.xyz/login',
+    expectStatus: 'Dangerous', minScore: 70,
+    expectCategory: 'Brand Impersonation' },
+  { name: 'Credential Harvesting: Unverified HTTPS login/password/reset',
+    input: 'https://untrusted-portal-check.org/auth/reset-password',
+    minScore: 15, maxScore: 29,
+    expectCategory: 'Credential Harvesting' },
+  { name: 'Suspicious Parameters: Encoded redirect destination + login path',
+    input: 'https://portal-check.org/login?redirect=https%3A%2F%2Fevil.top%2Fsteal',
+    expectStatus: 'Suspicious', minScore: 30,
+    expectCategory: 'Suspicious URL Parameters' },
+  { name: 'Suspicious Parameters: Executable javascript redirect parameter',
+    input: 'https://portal-check.org/go?next=javascript%3Aalert(1)',
+    expectStatus: 'Suspicious', minScore: 30,
+    expectCategory: 'Suspicious URL Parameters' },
+  { name: 'Suspicious Parameters: Credential parameter exposed in query string',
+    input: 'https://portal-check.org/auth?password=secret123',
+    expectStatus: 'Suspicious', minScore: 30,
+    expectCategory: 'Suspicious URL Parameters' },
+  { name: 'Suspicious Parameters: Double-encoded redirect parameter',
+    input: 'https://portal-check.org/go?url=https%253A%252F%252Fevil.com',
+    expectStatus: 'Suspicious', minScore: 30 },
+  { name: 'False-positive prevention: /author/profile should not trigger auth',
+    input: 'https://example.com/author/profile',
+    expectStatus: 'Safe', expectScore: 0 },
+  { name: 'False-positive prevention: Wikipedia article with Reset in path',
+    input: 'https://en.wikipedia.org/wiki/Reset',
+    expectStatus: 'Safe', expectScore: 0 },
+  { name: 'False-positive prevention: QR Guard GitHub repo URL',
+    input: 'https://github.com/shrutirajput745/qr-guard_02',
+    expectStatus: 'Safe', expectScore: 0 },
+  { name: 'Malformed URL: Whitespace in URL',
+    input: 'https://exa mple.com/login',
+    expectStatus: 'Suspicious', minScore: 30 },
+  { name: 'Malformed URL: Invalid percent encoding sequence',
+    input: 'https://example.com/%ZZbad',
+    minScore: 25 },
+  { name: 'Oversized URL payload safely clamped at score 100',
+    input: 'http://free-reward-claim.top/login?' + 'a='.repeat(2500),
+    expectStatus: 'Dangerous', expectScore: 100 },
+  { name: 'URL Structure Forensics decomposition accuracy',
+    input: 'https://sub1.sub2.example.co.uk:8443/users/verify?redirect=https%3A%2F%2Fdest.org#top',
+    minScore: 30,
+    checkForensics: (f) => (
+      f &&
+      f.protocol === 'HTTPS' &&
+      f.hostname === 'sub1.sub2.example.co.uk' &&
+      f.rootDomain === 'example.co.uk' &&
+      Array.isArray(f.subdomains) && f.subdomains.join('.') === 'sub1.sub2' &&
+      f.port === '8443' &&
+      f.path === '/users/verify' &&
+      f.fragment === '#top' &&
+      Array.isArray(f.queryParams) && f.queryParams.length === 1 &&
+      f.queryParams[0].key === 'redirect' &&
+      f.queryParams[0].decodedValue === 'https://dest.org'
+    ) }
 ];
 
 console.log('=== QR GUARD 2.0: AUTOMATED UNIT TEST SUITE ===');
@@ -111,6 +203,22 @@ testCases.forEach((tc) => {
     if (tc.expectQrType !== undefined && res.qrType !== tc.expectQrType) {
       ok = false;
       errors.push(`QR Type mismatch: expected '${tc.expectQrType}', got '${res.qrType}'`);
+    }
+    if (tc.expectCategory && (!Array.isArray(res.threatCategories) || !res.threatCategories.includes(tc.expectCategory))) {
+      ok = false;
+      errors.push(`Missing threat category '${tc.expectCategory}' in [${(res.threatCategories || []).join(', ')}]`);
+    }
+    if (tc.expectDecodedHostContains && (!res.forensics || !res.forensics.decodedHostname.includes(tc.expectDecodedHostContains))) {
+      ok = false;
+      errors.push(`Decoded hostname did not contain '${tc.expectDecodedHostContains}'`);
+    }
+    if (tc.checkForensics && !tc.checkForensics(res.forensics)) {
+      ok = false;
+      errors.push(`Forensics structure check failed: ${JSON.stringify(res.forensics)}`);
+    }
+    if (res.score < 0 || res.score > 100) {
+      ok = false;
+      errors.push(`Score out of bounds [0,100]: ${res.score}`);
     }
 
     if (ok) {

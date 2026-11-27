@@ -1,5 +1,6 @@
 const http = require('http');
 const app = require('../server');
+const QRAnalyzer = require('../public/js/analyzer');
 const analyzeServerlessHandler = require('../api/analyze');
 const healthServerlessHandler = require('../api/health');
 
@@ -159,7 +160,82 @@ async function runApiTests() {
       console.log('  ✖ [FAIL] Vercel Serverless method check failed');
     }
 
-    console.log(`\nAPI Test Results: ${passed} Passed, ${failed} Failed out of 8 Tests\n`);
+    // Test 8: Client vs Server consistency across Threat Intelligence & Forensics payloads
+    const consistencyPayloads = [
+      'https://p\u0430ypal.com/login',
+      'https://xn--80ak6aa92e.com/signin',
+      'https://paypa1.com/verify',
+      'https://portal-check.org/login?redirect=https%3A%2F%2Fevil.top',
+      'https://accounts.google.com/signin'
+    ];
+    let consistencyOk = true;
+    for (const payload of consistencyPayloads) {
+      const clientRes = QRAnalyzer.analyze(payload);
+      const apiRes = await makeRequest({
+        path: '/api/analyze',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      }, { qrData: payload });
+
+      if (
+        apiRes.statusCode !== 200 ||
+        apiRes.body.score !== clientRes.score ||
+        apiRes.body.status !== clientRes.status ||
+        JSON.stringify(apiRes.body.threatCategories) !== JSON.stringify(clientRes.threatCategories) ||
+        JSON.stringify(apiRes.body.forensics) !== JSON.stringify(clientRes.forensics)
+      ) {
+        consistencyOk = false;
+        console.log(`  ✖ [FAIL] Client/Server mismatch for ${payload}`);
+      }
+    }
+    if (consistencyOk) {
+      passed++;
+      console.log('  ✔ [PASS] Client QRAnalyzer and POST /api/analyze return identical scores, verdicts, categories, and forensics');
+    } else {
+      failed++;
+    }
+
+    // Test 9: Reject non-string qrData and oversized payloads cleanly
+    const badTypeRes = await makeRequest({
+      path: '/api/analyze',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    }, { qrData: { nested: 'object' } });
+    const hugeRes = await makeRequest({
+      path: '/api/analyze',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    }, { qrData: 'https://example.com/' + 'x'.repeat(17000) });
+
+    if (badTypeRes.statusCode === 400 && hugeRes.statusCode === 413) {
+      passed++;
+      console.log('  ✔ [PASS] API rejects non-string qrData (400) and oversized payloads (413)');
+    } else {
+      failed++;
+      console.log('  ✖ [FAIL] API input guard failed:', badTypeRes.statusCode, hugeRes.statusCode);
+    }
+
+    // Test 10: POST /api/sandbox offline behavior simulation
+    const sandboxRes = await makeRequest({
+      path: '/api/sandbox',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    }, { qrData: 'javascript:alert(1)' });
+
+    if (
+      sandboxRes.statusCode === 200 &&
+      sandboxRes.body.verdict === 'BLOCKED_EXECUTION' &&
+      sandboxRes.body.executedCode === false &&
+      sandboxRes.body.networkSimulated === false
+    ) {
+      passed++;
+      console.log('  ✔ [PASS] POST /api/sandbox blocks executable URI safely offline');
+    } else {
+      failed++;
+      console.log('  ✖ [FAIL] POST /api/sandbox failed:', sandboxRes);
+    }
+
+    console.log(`\nAPI Test Results: ${passed} Passed, ${failed} Failed out of 11 Tests\n`);
 
   } catch (err) {
     console.error('Fatal API test error:', err);

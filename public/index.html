@@ -14,6 +14,7 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/integrity.css">
 </head>
 <body>
 
@@ -50,6 +51,15 @@
       <button class="page-nav-btn active" data-page="scanner" id="navScanner">
         <i class="fa-solid fa-qrcode"></i> Universal Scanner
       </button>
+      <button class="page-nav-btn" data-page="threat-intel" id="navThreatIntel">
+        <i class="fa-solid fa-magnifying-glass-chart"></i> Threat Intelligence
+      </button>
+      <button class="page-nav-btn" data-page="integrity" id="navIntegrity">
+        <i class="fa-solid fa-fingerprint"></i> QR Integrity Lab
+      </button>
+      <button class="page-nav-btn" data-page="sandbox" id="navSandbox">
+        <i class="fa-solid fa-box-open"></i> Behavior Sandbox
+      </button>
       <button class="page-nav-btn" data-page="recovery" id="navRecovery">
         <i class="fa-solid fa-flask"></i> Blur Recovery Lab <span style="font-size:0.65rem; background:rgba(245, 158, 11, 0.2); color:#f59e0b; padding:2px 6px; border-radius:4px; margin-left:4px;">Experimental</span>
       </button>
@@ -80,8 +90,8 @@
       <div class="stat-item">
         <i class="fa-solid fa-shield-virus"></i>
         <div>
-          <span class="stat-value">10 Indicators</span>
-          <span class="stat-label">Security Checks</span>
+          <span class="stat-value">13+ Forensics</span>
+          <span class="stat-label">Threat Intel Checks</span>
         </div>
       </div>
       <div class="stat-divider"></div>
@@ -464,6 +474,24 @@
 
             </div>
 
+            <!-- URL Forensics & Threat Intelligence Summary (for URL payloads) -->
+            <div id="scannerForensicsPanel" class="scanner-forensics-panel" style="display:none;">
+              <div class="scanner-forensics-header">
+                <h4><i class="fa-solid fa-microscope"></i> URL Structure Forensics &amp; Threat Categories</h4>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <button id="openInSandboxBtn" type="button" class="btn btn-sm btn-secondary">
+                    <i class="fa-solid fa-box-open"></i> Simulate Behavior
+                  </button>
+                  <button id="openInThreatIntelBtn" type="button" class="btn btn-sm btn-outline">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i> Deep Investigation
+                  </button>
+                </div>
+              </div>
+              <div id="scannerThreatCategories" class="ti-tags-row" style="margin-bottom: 10px;"></div>
+              <div id="scannerHighlightedComponents" class="ti-components-grid" style="margin-bottom: 12px;"></div>
+              <div id="scannerForensicsGrid" class="ti-forensics-grid"></div>
+            </div>
+
             <!-- Safety Recommendation Box -->
             <div id="adviceBox" class="advice-box advice-safe">
               <i id="adviceIcon" class="fa-solid fa-lightbulb"></i>
@@ -539,6 +567,305 @@
 
     </div>
     <!-- end page-scanner -->
+
+    <!-- ══════════════════════ PAGE: THREAT INTELLIGENCE ══════════════════════ -->
+    <div class="page-content" id="page-threat-intel">
+      <section class="ti-hero card">
+        <div class="ti-hero-top">
+          <div>
+            <span class="section-tag"><i class="fa-solid fa-shield-virus"></i> QR THREAT INTELLIGENCE &amp; URL FORENSICS ENGINE</span>
+            <h2>Threat Intelligence Dashboard</h2>
+            <p>Offline deterministic URL forensics: homograph &amp; Punycode inspection, Damerau-Levenshtein typosquatting detection, credential-harvesting context analysis, and query parameter decomposition.</p>
+          </div>
+          <div class="ti-hero-actions">
+            <button id="tiClearTelemetryBtn" class="btn btn-sm btn-secondary">
+              <i class="fa-solid fa-trash"></i> Clear Telemetry
+            </button>
+          </div>
+        </div>
+
+        <!-- Direct Forensic Investigation Bar -->
+        <div class="ti-investigate-bar">
+          <div class="ti-input-row">
+            <input type="text" id="tiInvestigateInput" placeholder="Enter any URL or QR payload for deep forensic inspection (e.g. https://pаypal.com/login?redirect=https%3A%2F%2Fevil.top)…" autocomplete="off" spellcheck="false">
+            <button id="tiInvestigateBtn" class="btn btn-primary">
+              <i class="fa-solid fa-microscope"></i> Investigate URL
+            </button>
+          </div>
+          <div class="ti-presets-row">
+            <span class="ti-presets-label"><i class="fa-solid fa-bolt"></i> Quick Threat Scenarios:</span>
+            <button type="button" class="ti-preset-btn" data-url="https://pаypal.com/login">Unicode Homograph (pаypal.com)</button>
+            <button type="button" class="ti-preset-btn" data-url="https://xn--80ak6aa92e.com/signin">Punycode IDN (xn--80ak6aa92e.com)</button>
+            <button type="button" class="ti-preset-btn" data-url="https://paypa1-secure.com/verify">Typosquatting (paypa1)</button>
+            <button type="button" class="ti-preset-btn" data-url="https://portal-auth-check.com/login?redirect=https%3A%2F%2Fevil.top%2Fsteal">Encoded Redirect + Login</button>
+            <button type="button" class="ti-preset-btn" data-url="https://accounts.google.com/signin">Legitimate Auth (Safe)</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- KPI Summary Cards -->
+      <section class="ti-kpi-grid">
+        <div class="card ti-kpi-card">
+          <div class="ti-kpi-icon blue"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+          <div>
+            <span class="ti-kpi-label">Total URLs Analyzed</span>
+            <strong class="ti-kpi-value" id="tiTotalUrls">0</strong>
+            <span class="ti-kpi-sub">Session &amp; local telemetry</span>
+          </div>
+        </div>
+        <div class="card ti-kpi-card">
+          <div class="ti-kpi-icon safe"><i class="fa-solid fa-circle-check"></i></div>
+          <div>
+            <span class="ti-kpi-label">Safe URLs</span>
+            <strong class="ti-kpi-value text-safe" id="tiSafeUrls">0</strong>
+            <span class="ti-kpi-sub" id="tiSafePct">0%</span>
+          </div>
+        </div>
+        <div class="card ti-kpi-card">
+          <div class="ti-kpi-icon suspicious"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div>
+            <span class="ti-kpi-label">Suspicious URLs</span>
+            <strong class="ti-kpi-value text-suspicious" id="tiSuspiciousUrls">0</strong>
+            <span class="ti-kpi-sub" id="tiSuspiciousPct">0%</span>
+          </div>
+        </div>
+        <div class="card ti-kpi-card">
+          <div class="ti-kpi-icon dangerous"><i class="fa-solid fa-skull-crossbones"></i></div>
+          <div>
+            <span class="ti-kpi-label">Dangerous URLs</span>
+            <strong class="ti-kpi-value text-dangerous" id="tiDangerousUrls">0</strong>
+            <span class="ti-kpi-sub" id="tiDangerousPct">0%</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics Grid: Threat Categories & Indicator Distribution -->
+      <section class="ti-analytics-grid">
+        <div class="card ti-panel-card">
+          <div class="ti-panel-header">
+            <h3><i class="fa-solid fa-chart-bar"></i> Most Frequent Threat Categories</h3>
+            <span class="ti-panel-badge">Heuristic Telemetry</span>
+          </div>
+          <div id="tiCategoriesChart" class="ti-chart-body"></div>
+        </div>
+
+        <div class="card ti-panel-card">
+          <div class="ti-panel-header">
+            <h3><i class="fa-solid fa-layer-group"></i> Threat Indicator Distribution</h3>
+            <span class="ti-panel-badge">By Severity &amp; Weight</span>
+          </div>
+          <div id="tiIndicatorsChart" class="ti-chart-body"></div>
+        </div>
+      </section>
+
+      <!-- Main Investigation Split: Recent Analyses Feed + Detailed Forensics Report -->
+      <section class="ti-investigation-layout">
+        <div class="card ti-feed-card">
+          <div class="ti-panel-header">
+            <h3><i class="fa-solid fa-list-ul"></i> Recent URL Analyses</h3>
+            <div class="ti-filter-group">
+              <button type="button" class="ti-filter-btn active" data-filter="all">All</button>
+              <button type="button" class="ti-filter-btn" data-filter="flagged">Flagged</button>
+              <button type="button" class="ti-filter-btn" data-filter="dangerous">Dangerous</button>
+              <button type="button" class="ti-filter-btn" data-filter="suspicious">Suspicious</button>
+              <button type="button" class="ti-filter-btn" data-filter="safe">Safe</button>
+            </div>
+          </div>
+          <div id="tiRecentFeed" class="ti-feed-list"></div>
+        </div>
+
+        <div class="card ti-report-card">
+          <div id="tiInvestigationPanel"></div>
+        </div>
+      </section>
+
+      <div class="disclaimer-box" style="margin: 18px 0 28px;">
+        <i class="fa-solid fa-circle-info"></i>
+        <span><strong>Offline Heuristic Intelligence:</strong> All forensics run deterministically without external URL fetching, preventing SSRF or payload execution. Low heuristic scores do not guarantee real-time domain reputation or zero-day safety.</span>
+      </div>
+    </div>
+    <!-- end page-threat-intel -->
+
+    <!-- ══════════════════════ PAGE: QR INTEGRITY LAB ═══════════════════════════ -->
+    <div class="page-content" id="page-integrity">
+      <section class="card il-hero">
+        <span class="section-tag"><i class="fa-solid fa-fingerprint"></i> QR TRUST FINGERPRINT &amp; VISUAL INTEGRITY ANALYZER</span>
+        <h2>QR Integrity Lab</h2>
+        <p>Inspect the physical and structural integrity of QR images: extract ISO/IEC 18004 version, EC level, mask pattern, finder/timing/alignment accuracy, quiet zone, logo interference, reproducible SHA-256 payload &amp; matrix fingerprints, visual anomaly heatmaps, and side-by-side QR replacement comparison.</p>
+
+        <div class="il-presets-bar">
+          <span class="ti-presets-label"><i class="fa-solid fa-vial"></i> Synthetic Forensic Samples:</span>
+          <button type="button" class="ti-preset-btn il-preset-btn" data-preset="clean">Clean QR</button>
+          <button type="button" class="ti-preset-btn il-preset-btn" data-preset="logo">Centered Brand Logo</button>
+          <button type="button" class="ti-preset-btn il-preset-btn" data-preset="damaged-finder">Damaged Finder Pattern</button>
+          <button type="button" class="ti-preset-btn il-preset-btn" data-preset="offcenter-patch">Off-Center Patch</button>
+          <button type="button" class="ti-preset-btn il-preset-btn" data-preset="rotated">Rotated 90°</button>
+        </div>
+      </section>
+
+      <!-- Dual Upload Cards (Primary Image A + Optional Comparison Image B) -->
+      <section class="il-upload-grid">
+        <div class="card il-upload-card">
+          <div class="il-card-header">
+            <h3><i class="fa-solid fa-qrcode"></i> Primary QR Image (Image A)</h3>
+            <span class="ti-panel-badge">Structural &amp; Fingerprint Audit</span>
+          </div>
+          <div class="il-upload-split">
+            <div class="drop-zone il-drop-zone" id="ilDropZoneA">
+              <div class="drop-zone-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+              <h4>Drop QR Image A</h4>
+              <p>PNG, JPG, WEBP</p>
+              <label class="btn btn-primary btn-sm file-label" style="margin-top:8px;">
+                <i class="fa-solid fa-folder-open"></i> Browse
+                <input type="file" id="ilFileInputA" accept="image/*" hidden>
+              </label>
+            </div>
+            <div class="il-preview-box">
+              <img id="ilPreviewA" src="" alt="QR Image A preview" style="display:none;">
+              <div id="ilPlaceholderA" class="il-preview-placeholder">
+                <i class="fa-solid fa-image"></i>
+                <span>Image A Preview</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card il-upload-card">
+          <div class="il-card-header">
+            <h3><i class="fa-solid fa-code-compare"></i> Comparison QR Image (Image B)</h3>
+            <span class="ti-panel-badge">Optional Replacement Check</span>
+          </div>
+          <div class="il-upload-split">
+            <div class="drop-zone il-drop-zone" id="ilDropZoneB">
+              <div class="drop-zone-icon"><i class="fa-solid fa-images"></i></div>
+              <h4>Drop QR Image B</h4>
+              <p>Compare against Image A</p>
+              <label class="btn btn-outline btn-sm file-label" style="margin-top:8px;">
+                <i class="fa-solid fa-folder-open"></i> Browse
+                <input type="file" id="ilFileInputB" accept="image/*" hidden>
+              </label>
+            </div>
+            <div class="il-preview-box">
+              <img id="ilPreviewB" src="" alt="QR Image B preview" style="display:none;">
+              <div id="ilPlaceholderB" class="il-preview-placeholder">
+                <i class="fa-solid fa-image"></i>
+                <span>Image B Preview</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Side-by-Side Comparison Controls & Presets -->
+      <section class="card il-compare-controls">
+        <div class="il-compare-presets">
+          <span class="ti-presets-label"><i class="fa-solid fa-scale-balanced"></i> Compare Scenarios:</span>
+          <button type="button" class="ti-preset-btn il-compare-preset-btn" data-compare-preset="rotated">Clean vs Rotated 90°</button>
+          <button type="button" class="ti-preset-btn il-compare-preset-btn" data-compare-preset="different-ec">Same Payload (EC-M vs EC-H)</button>
+          <button type="button" class="ti-preset-btn il-compare-preset-btn" data-compare-preset="logo">Clean vs Centered Logo</button>
+          <button type="button" class="ti-preset-btn il-compare-preset-btn" data-compare-preset="replacement">QR Replacement Attack</button>
+        </div>
+        <button id="ilRunCompareBtn" class="btn btn-primary btn-sm">
+          <i class="fa-solid fa-code-compare"></i> Compare Image A vs B
+        </button>
+      </section>
+
+      <!-- Comparison Report Output -->
+      <section id="ilCompareResults" class="card il-panel" style="display:none; margin-bottom:22px;"></section>
+
+      <!-- Empty State for Single Inspection -->
+      <div id="ilSingleEmpty" class="ti-investigation-empty" style="margin-bottom:22px;">
+        <i class="fa-solid fa-fingerprint"></i>
+        <h4>Upload a QR Image or Select a Synthetic Forensic Sample</h4>
+        <p>QR Integrity Lab extracts matrix metadata, separates decoder-provided vs estimated properties, computes SHA-256 payload and structural fingerprints, and generates a module-level anomaly heatmap.</p>
+      </div>
+
+      <!-- Single Inspection Results -->
+      <div id="ilSingleResults" style="display:none;">
+        <div id="ilStatusBanner"></div>
+
+        <div class="il-analysis-grid">
+          <div class="card il-panel">
+            <h3><i class="fa-solid fa-fingerprint"></i> Reproducible QR Trust Fingerprints</h3>
+            <div id="ilFingerprintsBox"></div>
+          </div>
+
+          <div class="card il-panel">
+            <h3><i class="fa-solid fa-fire"></i> Visual Anomaly Heatmap</h3>
+            <div class="il-heatmap-box">
+              <canvas id="ilSingleHeatmapCanvas" width="240" height="240" class="il-heatmap-canvas"></canvas>
+              <div class="il-heatmap-legend">
+                <span><i class="legend-dot same"></i> Normal</span>
+                <span><i class="legend-dot blur"></i> Low Contrast</span>
+                <span><i class="legend-dot data-diff"></i> Overlay / Patch</span>
+                <span><i class="legend-dot fn-diff"></i> Structural Error</span>
+              </div>
+              <p id="ilHeatmapNote" class="il-muted"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card il-panel" style="margin-bottom:22px;">
+          <h3><i class="fa-solid fa-table-cells"></i> Structural &amp; Visual Properties (With Measurement Provenance)</h3>
+          <div id="ilStructureGrid" class="il-struct-grid"></div>
+        </div>
+
+        <div class="card il-panel" style="margin-bottom:22px;">
+          <h3><i class="fa-solid fa-shield-halved"></i> Forensic Findings &amp; Tampering Assessment</h3>
+          <div id="ilFindingsList" class="issues-list"></div>
+        </div>
+      </div>
+
+      <div class="disclaimer-box" style="margin: 10px 0 28px;">
+        <i class="fa-solid fa-circle-info"></i>
+        <span><strong>Forensic Uncertainty Notice:</strong> Visual appearance and structural matching alone cannot prove intent or sender authenticity. Matching fingerprints verify payload/matrix equivalence, not URL safety or trustworthiness.</span>
+      </div>
+    </div>
+    <!-- end page-integrity -->
+
+    <!-- ══════════════════════ PAGE: QR BEHAVIOR SANDBOX ═══════════════════════ -->
+    <div class="page-content" id="page-sandbox">
+      <section class="card ti-hero">
+        <div class="ti-hero-top">
+          <div>
+            <span class="section-tag"><i class="fa-solid fa-box-open"></i> OFFLINE PRE-NAVIGATION SIMULATOR</span>
+            <h2>QR Behavior Sandbox</h2>
+            <p>Safely trace what a QR payload would do on a device or browser—dispatch handler, static redirect hops, file downloads, Android intents, UPI payments, or blocked script schemes—without executing code or fetching external URLs.</p>
+          </div>
+        </div>
+        <div class="ti-investigate-bar">
+          <div class="ti-input-row">
+            <input type="text" id="sbPayloadInput" placeholder="Enter any QR payload (https://..., javascript:..., intent://..., upi://..., WIFI:...) to simulate behavior…" autocomplete="off" spellcheck="false">
+            <button id="sbRunBtn" class="btn btn-primary">
+              <i class="fa-solid fa-play"></i> Simulate Behavior
+            </button>
+          </div>
+          <div class="ti-presets-row">
+            <span class="ti-presets-label"><i class="fa-solid fa-bolt"></i> Sandbox Scenarios:</span>
+            <button type="button" class="ti-preset-btn sb-preset-btn" data-payload="javascript:alert(document.cookie)">Executable javascript: URI</button>
+            <button type="button" class="ti-preset-btn sb-preset-btn" data-payload="https://portal-check.org/go?redirect=https%3A%2F%2Fevil.top%2Fapp.apk">Redirect + APK Download</button>
+            <button type="button" class="ti-preset-btn sb-preset-btn" data-payload="intent://pay/confirm#Intent;scheme=https;package=com.unknown.wallet;S.browser_fallback_url=https%3A%2F%2Fevil.top;end">Android Intent Hijack</button>
+            <button type="button" class="ti-preset-btn sb-preset-btn" data-payload="upi://pay?pa=merchant@upi&pn=DemoShop&am=499&cu=INR">UPI Payment Prompt</button>
+            <button type="button" class="ti-preset-btn sb-preset-btn" data-payload="WIFI:S:FreeAirportWiFi;T:nopass;P:;;">Open Wi-Fi Auto-Join</button>
+            <button type="button" class="ti-preset-btn sb-preset-btn" data-payload="https://wikipedia.org">Clean HTTPS Site</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="sbEmptyState" class="ti-investigation-empty" style="margin-bottom:22px;">
+        <i class="fa-solid fa-box-open"></i>
+        <h4>Enter a QR Payload or Pick a Sandbox Scenario</h4>
+        <p>The Behavior Sandbox simulates device intent dispatch, redirect hops, and download risks offline without opening links or running scripts.</p>
+      </div>
+
+      <div id="sbResultsContainer" style="display:none; margin-bottom:22px;"></div>
+
+      <div class="disclaimer-box" style="margin: 10px 0 28px;">
+        <i class="fa-solid fa-circle-info"></i>
+        <span><strong>Zero-Execution Containment:</strong> Simulations are deterministic and offline. No network connections, redirects, or JavaScript sinks are ever invoked.</span>
+      </div>
+    </div>
+    <!-- end page-sandbox -->
 
     <!-- ══════════════════════ PAGE: BLUR RECOVERY LAB ══════════════════════ -->
     <div class="page-content" id="page-recovery">
@@ -1615,6 +1942,11 @@
   <script src="js/scanner.js"></script>
   <script src="js/samples.js"></script>
   <script src="js/history.js"></script>
+  <script src="js/threat-intel.js"></script>
+  <script src="js/integrity-engine.js"></script>
+  <script src="js/integrity-lab.js"></script>
+  <script src="js/behavior-sandbox.js"></script>
+  <script src="js/sandbox-ui.js"></script>
   <script src="js/recovery.js"></script>
   <script src="js/demo.js"></script>
   <script src="js/architecture.js"></script>

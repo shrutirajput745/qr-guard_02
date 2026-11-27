@@ -35,11 +35,17 @@ function checkJsSyntax(relPath) {
 console.log('▶ [1/4] Checking Required Distribution Files...');
 checkFileExists('public/index.html');
 checkFileExists('public/css/style.css');
+checkFileExists('public/css/integrity.css');
 checkFileExists('public/js/analyzer.js');
 checkFileExists('public/js/app.js');
 checkFileExists('public/js/scanner.js');
 checkFileExists('public/js/samples.js');
 checkFileExists('public/js/history.js');
+checkFileExists('public/js/threat-intel.js');
+checkFileExists('public/js/integrity-engine.js');
+checkFileExists('public/js/integrity-lab.js');
+checkFileExists('public/js/behavior-sandbox.js');
+checkFileExists('public/js/sandbox-ui.js');
 checkFileExists('public/js/recovery.js');
 checkFileExists('public/js/demo.js');
 checkFileExists('public/js/vendor/jsQR.js');
@@ -50,6 +56,7 @@ checkFileExists('public/images/demo/demo-lowcontrast.png');
 checkFileExists('public/images/demo/demo-blurry.png');
 checkFileExists('public/images/demo/demo-corrupted.png');
 checkFileExists('api/analyze.js');
+checkFileExists('api/sandbox.js');
 checkFileExists('api/health.js');
 checkFileExists('server.js');
 checkFileExists('vercel.json');
@@ -60,9 +67,15 @@ checkJsSyntax('public/js/app.js');
 checkJsSyntax('public/js/scanner.js');
 checkJsSyntax('public/js/samples.js');
 checkJsSyntax('public/js/history.js');
+checkJsSyntax('public/js/threat-intel.js');
+checkJsSyntax('public/js/integrity-engine.js');
+checkJsSyntax('public/js/integrity-lab.js');
+checkJsSyntax('public/js/behavior-sandbox.js');
+checkJsSyntax('public/js/sandbox-ui.js');
 checkJsSyntax('public/js/recovery.js');
 checkJsSyntax('public/js/demo.js');
 checkJsSyntax('api/analyze.js');
+checkJsSyntax('api/sandbox.js');
 checkJsSyntax('api/health.js');
 checkJsSyntax('server.js');
 
@@ -99,6 +112,7 @@ try {
 console.log('\n▶ [4/4] Validating Vercel Serverless Handlers...');
 try {
   const analyzeHandler = require('../api/analyze');
+  const sandboxHandler = require('../api/sandbox');
   const healthHandler = require('../api/health');
 
   if (typeof analyzeHandler !== 'function') {
@@ -106,6 +120,13 @@ try {
     errors++;
   } else {
     console.log('  ✔ api/analyze.js exports valid serverless handler');
+  }
+
+  if (typeof sandboxHandler !== 'function') {
+    console.error('  ✖ api/sandbox.js does not export a function handler');
+    errors++;
+  } else {
+    console.log('  ✔ api/sandbox.js exports valid serverless handler');
   }
 
   if (typeof healthHandler !== 'function') {
