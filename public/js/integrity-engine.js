@@ -667,10 +667,11 @@
     if (
       !imageInput ||
       !imageInput.data ||
-      typeof imageInput.width !== 'number' ||
-      typeof imageInput.height !== 'number' ||
+      !Number.isFinite(imageInput.width) ||
+      !Number.isFinite(imageInput.height) ||
       imageInput.width < 10 ||
-      imageInput.height < 10
+      imageInput.height < 10 ||
+      imageInput.data.length < imageInput.width * imageInput.height * 4
     ) {
       return buildInsufficientEvidenceReport(null, 'Invalid or missing RGBA image buffer.');
     }
@@ -706,8 +707,11 @@
     }
 
     const version = decoded.version;
-    const dim = 17 + 4 * version;
     const loc = decoded.location;
+    if (!version || version < 1 || version > 40 || !loc || !loc.topLeftCorner || !loc.topRightCorner || !loc.bottomRightCorner || !loc.bottomLeftCorner) {
+      return buildInsufficientEvidenceReport(visual, 'Decoded QR structure metadata or corner locator points are incomplete.');
+    }
+    const dim = 17 + 4 * version;
 
     // Estimate pixels per module from top/left corner distances
     const topWidthPx = Math.hypot(loc.topRightCorner.x - loc.topLeftCorner.x, loc.topRightCorner.y - loc.topLeftCorner.y);

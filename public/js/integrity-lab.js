@@ -41,6 +41,10 @@ window.QRIntegrityLab = (function() {
           const maxDim = 900;
           let w = img.naturalWidth || img.width;
           let h = img.naturalHeight || img.height;
+          if (!w || !h || w < 1 || h < 1) {
+            reject(new Error('Image has invalid or zero dimensions.'));
+            return;
+          }
           if (w > maxDim || h > maxDim) {
             const scale = maxDim / Math.max(w, h);
             w = Math.round(w * scale);
@@ -585,6 +589,8 @@ window.QRIntegrityLab = (function() {
         onImageReady(imgObj);
       } catch (err) {
         if (window.showToast) window.showToast(err.message, 'warning');
+      } finally {
+        e.target.value = '';
       }
     });
     fileInput.addEventListener('change', async (e) => {
@@ -595,6 +601,8 @@ window.QRIntegrityLab = (function() {
         onImageReady(imgObj);
       } catch (err) {
         if (window.showToast) window.showToast(err.message, 'warning');
+      } finally {
+        e.target.value = '';
       }
     });
   }

@@ -33,7 +33,9 @@ window.QRScanner = {
   },
 
   startCamera: function() {
-    if (this.isScanning) return;
+    if (this.isScanning || this.isStarting) return;
+    this.isStarting = true;
+    this.stopRequested = false;
 
     const overlay = document.getElementById('scannerOverlay');
     if (overlay) overlay.style.display = 'flex';
@@ -62,6 +64,12 @@ window.QRScanner = {
         // Normal frame scanning state when searching for QR
       }
     ).then(() => {
+      this.isStarting = false;
+      if (this.stopRequested) {
+        this.isScanning = true;
+        this.stopCamera();
+        return;
+      }
       this.isScanning = true;
       const startBtn = document.getElementById('startCamBtn');
       const stopBtn = document.getElementById('stopCamBtn');
@@ -73,6 +81,8 @@ window.QRScanner = {
         camBadge.innerHTML = '<i class="fa-solid fa-circle"></i> SCANNING ACTIVE';
       }
     }).catch(err => {
+      this.isStarting = false;
+      this.stopRequested = false;
       console.warn("Camera access failed or denied:", err);
       this.stopCamera();
       const camBadge = document.getElementById('camStatusBadge');
@@ -87,6 +97,9 @@ window.QRScanner = {
   },
 
   stopCamera: function() {
+    if (this.isStarting) {
+      this.stopRequested = true;
+    }
     const startBtn = document.getElementById('startCamBtn');
     const stopBtn = document.getElementById('stopCamBtn');
     const overlay = document.getElementById('scannerOverlay');
@@ -95,6 +108,7 @@ window.QRScanner = {
     if (this.html5QrcodeScanner && this.isScanning) {
       this.html5QrcodeScanner.stop().then(() => {
         this.isScanning = false;
+        this.stopRequested = false;
         if (startBtn) startBtn.style.display = 'inline-flex';
         if (stopBtn) stopBtn.style.display = 'none';
         if (overlay) overlay.style.display = 'none';
@@ -102,7 +116,11 @@ window.QRScanner = {
           camBadge.className = 'cam-status-badge';
           camBadge.innerHTML = '<i class="fa-solid fa-circle"></i> STANDBY';
         }
-      }).catch(err => console.error("Failed to stop scanner:", err));
+      }).catch(err => {
+        this.isScanning = false;
+        this.stopRequested = false;
+        console.error("Failed to stop scanner:", err);
+      });
     } else {
       if (startBtn) startBtn.style.display = 'inline-flex';
       if (stopBtn) stopBtn.style.display = 'none';
@@ -157,9 +175,16 @@ window.QRScanner = {
   },
 
   handleFile: function(file) {
-    if (!file.type.startsWith('image/')) {
+    if (!file || !file.type.startsWith('image/')) {
       if (this.onScanErrorCallback) {
         this.onScanErrorCallback("Invalid File Format: Please select an image file (PNG, JPG, WEBP).");
+      }
+      return;
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      if (this.onScanErrorCallback) {
+        this.onScanErrorCallback("File Too Large: Image exceeds the 8MB maximum upload limit.");
       }
       return;
     }
@@ -179,57 +204,77 @@ window.QRScanner = {
       if (dropZone) dropZone.style.display = 'none';
       if (uploadPreview) uploadPreview.style.display = 'flex';
     };
+    reader.onerror = () => {
+      if (this.onScanErrorCallback) {
+        this.onScanErrorCallback("Failed to read uploaded image file.");
+      }
+    };
     reader.readAsDataURL(file);
     // store current file for enhancement
     this.currentUploadFile = file;
 
+    const showDecodeFailure = () => {
+      if (uploadErrorBox) {
+        uploadErrorBox.style.display = 'block';
+        uploadErrorBox.innerHTML = `
+          <div class="upload-error-content">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div>
+              <strong>Unreadable QR Code:</strong>
+              <p>No valid QR pattern detected directly. Try clicking <strong>"Enhance & Scan"</strong> below to recover blurry, low-contrast, or noisy QR codes.</p>
+            </div>
+          </div>
+        `;
+      }
+      if (this.onScanErrorCallback) {
+        this.onScanErrorCallback("Could not extract a valid QR code directly. Try the Blur Recovery Lab.");
+      }
+    };
+
     const tryJsQr = () => {
+      const objectUrl = URL.createObjectURL(file);
       const img = new Image();
       img.onload = () => {
         try {
           const cvs = document.createElement('canvas');
-          cvs.width = img.naturalWidth || img.width;
-          cvs.height = img.naturalHeight || img.height;
-          const ctx = cvs.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-          const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
-          if (window.jsQR) {
-            const qr = window.jsQR(imgData.data, cvs.width, cvs.height, { inversionAttempts: 'attemptBoth' });
-            if (qr && qr.data) {
-              if (this.onScanSuccessCallback) {
-                this.onScanSuccessCallback(qr.data);
+          const w = img.naturalWidth || img.width;
+          const h = img.naturalHeight || img.height;
+          if (w > 0 && h > 0) {
+            cvs.width = w;
+            cvs.height = h;
+            const ctx = cvs.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const imgData = ctx.getImageData(0, 0, w, h);
+            if (window.jsQR) {
+              const qr = window.jsQR(imgData.data, w, h, { inversionAttempts: 'attemptBoth' });
+              if (qr && qr.data) {
+                URL.revokeObjectURL(objectUrl);
+                if (this.onScanSuccessCallback) {
+                  this.onScanSuccessCallback(qr.data);
+                }
+                return;
               }
-              return;
             }
           }
         } catch (e) {
           console.warn("jsQR fallback scan error:", e);
         }
-
-        // Both decoders failed
-        if (uploadErrorBox) {
-          uploadErrorBox.style.display = 'block';
-          uploadErrorBox.innerHTML = `
-            <div class="upload-error-content">
-              <i class="fa-solid fa-triangle-exclamation"></i>
-              <div>
-                <strong>Unreadable QR Code:</strong>
-                <p>No valid QR pattern detected directly. Try clicking <strong>"Enhance & Scan"</strong> below to recover blurry, low-contrast, or noisy QR codes.</p>
-              </div>
-            </div>
-          `;
-        }
-        if (this.onScanErrorCallback) {
-          this.onScanErrorCallback("Could not extract a valid QR code directly. Try the Blur Recovery Lab.");
-        }
+        URL.revokeObjectURL(objectUrl);
+        showDecodeFailure();
       };
-      img.src = reader.result;
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        showDecodeFailure();
+      };
+      img.src = objectUrl;
     };
 
     // Decode QR from image file using Html5Qrcode, fallback to jsQR
     try {
-      const html5QrCode = new Html5Qrcode("reader");
-      html5QrCode.scanFile(file, true)
+      const html5QrCode = (!this.isScanning && this.html5QrcodeScanner)
+        ? this.html5QrcodeScanner
+        : new Html5Qrcode("reader");
+      html5QrCode.scanFile(file, false)
         .then(decodedText => {
           if (this.onScanSuccessCallback) {
             this.onScanSuccessCallback(decodedText);

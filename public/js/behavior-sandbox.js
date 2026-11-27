@@ -36,6 +36,24 @@
     }
   }
 
+  function stripAsciiControls(str) {
+    return typeof str === 'string' ? str.replace(/[\u0000-\u001f\u007f]+/g, '') : '';
+  }
+
+  function looksLikeBareWebUrl(str) {
+    if (!str || typeof str !== 'string' || /\s/.test(str)) return false;
+    if (/^[a-z0-9+.-]+:/i.test(str) && !/^[a-z0-9.-]+:\d+(?:\/|$)/i.test(str)) return false;
+    const beforeQuery = str.split('?')[0].split('#')[0];
+    const hostPart = beforeQuery.split('/')[0];
+    if (hostPart.includes('@') && !beforeQuery.includes('/') && !/:[0-9]+$/.test(hostPart)) {
+      return false;
+    }
+    const targetHostPort = hostPart.includes('@') ? hostPart.slice(hostPart.lastIndexOf('@') + 1) : hostPart;
+    const hostOnly = targetHostPort.replace(/:\d+$/, '');
+    if (!hostOnly || /[<>"'=();@]/.test(hostOnly)) return false;
+    return /^[^\s\/.<>"'=();:@]+(?:\.[^\s\/.<>"'=();:@]+)+$/.test(hostOnly) && /\.(?:[a-z\u0080-\uffff]{2,}|xn--[a-z0-9]{2,})$/i.test(hostOnly);
+  }
+
   function traceStaticRedirects(initialUrl, maxHops = 3) {
     const hops = [];
     let current = initialUrl;
@@ -143,9 +161,10 @@
     let verdictLabel = 'Safe & Contained';
     let riskLevel = 'LOW';
 
-    // 1. Executable / Dangerous Schemes
-    if (EXECUTABLE_SCHEMES.some(s => lower.startsWith(s))) {
-      const scheme = payload.split(':')[0].toLowerCase() + ':';
+    // 1. Executable / Dangerous Schemes (strip ASCII control characters to prevent java\tscript: bypass)
+    const normalizedScheme = stripAsciiControls(lower);
+    if (EXECUTABLE_SCHEMES.some(s => normalizedScheme.startsWith(s))) {
+      const scheme = normalizedScheme.split(':')[0].toLowerCase() + ':';
       handlerType = scheme === 'file:' ? 'Local Filesystem Handler' : 'Active Script / URI Execution Sink';
       verdict = 'BLOCKED_EXECUTION';
       verdictLabel = `Blocked Execution (${scheme})`;
@@ -190,7 +209,7 @@
       recommendations.push('Do not copy this string into command terminals or unescaped web inputs.');
     }
     // 3. Android Intent URI
-    else if (lower.startsWith('intent://')) {
+    else if (normalizedScheme.startsWith('intent://')) {
       const intentInfo = parseAndroidIntent(payload);
       previewData = { kind: 'intent', ...intentInfo };
       handlerType = 'Android Intent Dispatcher';
@@ -220,8 +239,8 @@
       }
       recommendations.push('Verify the target Android package and fallback URL before allowing app launch.');
     }
-    // 4. Web URL (http / https / ftp or bare domain)
-    else if (/^(https?|ftp):\/\//i.test(payload) || (/^[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/.*)?$/i.test(payload) && !/\s/.test(payload))) {
+    // 4. Web URL (http / https / ftp or bare domain including IDN, port, and query)
+    else if (/^(https?|ftp):\/\//i.test(payload) || looksLikeBareWebUrl(payload)) {
       const candidate = /^(https?|ftp):\/\//i.test(payload) ? payload : 'http://' + payload;
       let parsed = null;
       try {
@@ -375,13 +394,22 @@
     }
     // 7. Device Communication Schemes (tel, sms, mailto, geo, vcard)
     else if (/^(tel:|sms:|smsto:|mailto:|geo:|BEGIN:VCARD)/i.test(payload)) {
-      const prefix = payload.split(':')[0].toUpperCase();
-      handlerType = `${prefix} Device Handler`;
+      const isVCard = /^BEGIN:VCARD/i.test(payload);
+      const prefix = isVCard ? 'VCARD' : payload.split(':')[0].toUpperCase();
+      handlerType = isVCard ? 'vCard Contact Handler' : `${prefix} Device Handler`;
       verdict = 'CAUTION_INTERACTIVE_ACTION';
       verdictLabel = 'Device Action Prompt';
       riskLevel = 'LOW';
       permissionsRequested.push(`OS ${prefix} App Launch`);
-      if (/^(sms:|smsto:)/i.test(payload)) {
+      if (isVCard) {
+        const fn = (payload.match(/FN:([\s\S]+?)(?=[\r\n]+|\s+(?:(?:TEL|EMAIL|ORG|ADR|URL|NOTE)[:;]|END:VCARD)|$)/i) || [])[1] || '';
+        const tel = (payload.match(/TEL[^:]*:([\s\S]+?)(?=[\r\n]+|\s+(?:(?:FN|EMAIL|ORG|ADR|URL|NOTE)[:;]|END:VCARD)|$)/i) || [])[1] || '';
+        const email = (payload.match(/EMAIL[^:]*:([\s\S]+?)(?=[\r\n]+|\s+(?:(?:FN|TEL|ORG|ADR|URL|NOTE)[:;]|END:VCARD)|$)/i) || [])[1] || '';
+        previewData = { kind: 'vcard', name: fn.trim() || '(unnamed)', phone: tel.trim() || '(none)', email: email.trim() || '(none)' };
+      } else if (/^geo:/i.test(payload)) {
+        const coords = payload.replace(/^geo:/i, '').split(',');
+        previewData = { kind: 'geo', latitude: coords[0] || '', longitude: coords[1] ? coords[1].split(';')[0] : '' };
+      } else if (/^(sms:|smsto:)/i.test(payload)) {
         const rawSms = payload.replace(/^(sms:|smsto:)/i, '');
         const [num, ...msgParts] = rawSms.split(':');
         previewData = { kind: 'sms', recipient: num.trim(), message: safeDecode(msgParts.join(':').trim() || '(none)') };

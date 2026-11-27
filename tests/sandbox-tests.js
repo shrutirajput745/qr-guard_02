@@ -71,5 +71,27 @@ assert(sClean.verdict === 'SAFE_CONTAINED' && sClean.riskLevel === 'LOW', 'Clean
 const sText = QRBehaviorSandbox.simulate('Welcome to QR Guard');
 assert(sText.verdict === 'SAFE_CONTAINED' && sText.handlerType === 'Plain Text Display', 'Plain text modeled safely');
 
+// 9. Audit Regression Fixes (control-char scheme bypass, IDN/port/query bare URLs, vCard, geo, null/non-string)
+const sJsTab = QRBehaviorSandbox.simulate('java\tscript:alert(1)');
+assert(sJsTab.verdict === 'BLOCKED_EXECUTION' && sJsTab.executedCode === false, 'Control-char javascript: scheme blocked in sandbox');
+
+const sBarePort = QRBehaviorSandbox.simulate('example.com:8080/login');
+assert(sBarePort.handlerType === 'Web Browser Navigation' && sBarePort.verdict === 'CAUTION_INTERACTIVE_ACTION', 'Bare domain with port modeled as Web Browser Navigation');
+
+const sBareEmail = QRBehaviorSandbox.simulate('support@example.com');
+assert(sBareEmail.handlerType === 'Plain Text Display' && sBareEmail.verdict === 'SAFE_CONTAINED', 'Bare email address stays Plain Text Display');
+
+const sVCard = QRBehaviorSandbox.simulate('BEGIN:VCARD\nFN:Alice Smith\nTEL:+15551234\nEMAIL:alice@example.org\nEND:VCARD');
+assert(sVCard.handlerType === 'vCard Contact Handler' && sVCard.previewData && sVCard.previewData.kind === 'vcard' && sVCard.previewData.name === 'Alice Smith', 'vCard uses accurate handlerType and previewData');
+
+const sVCardSingleLine = QRBehaviorSandbox.simulate('BEGIN:VCARD FN:Alice TEL:+123 END:VCARD');
+assert(sVCardSingleLine.previewData && sVCardSingleLine.previewData.name === 'Alice' && sVCardSingleLine.previewData.phone === '+123', 'Single-line collapsed vCard parses fields cleanly without trailing tokens');
+
+const sGeo = QRBehaviorSandbox.simulate('geo:37.7749,-122.4194');
+assert(sGeo.handlerType === 'GEO Device Handler' && sGeo.previewData && sGeo.previewData.kind === 'geo', 'Geo intent populates geo previewData');
+
+const sNull = QRBehaviorSandbox.simulate(null);
+assert(sNull.verdict === 'BLOCKED_EXECUTION' && sNull.executedCode === false, 'Null input safely blocked without throwing');
+
 console.log(`\nBehavior Sandbox Test Results: ${passed} Passed, ${failed} Failed out of ${passed + failed} Tests\n`);
 if (failed > 0) process.exit(1);

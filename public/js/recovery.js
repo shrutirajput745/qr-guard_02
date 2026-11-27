@@ -20,6 +20,9 @@
 
   // ── 1. Image Quality Estimation (Laplacian Variance & Contrast) ────────────
   function estimateImageQualityFromData(data, width, height) {
+    if (!data || !width || !height || width <= 0 || height <= 0 || data.length < width * height * 4) {
+      return { blurScore: 0, contrast: 0, brightness: 0, qualityLabel: 'Insufficient Data', isBlurry: true, isLowContrast: true };
+    }
     const totalPixels = width * height;
     const gray = new Float32Array(totalPixels);
 
@@ -311,6 +314,11 @@
     const canvas = document.createElement('canvas');
     let w = img.naturalWidth || img.width;
     let h = img.naturalHeight || img.height;
+    if (!w || !h || w < 1 || h < 1) {
+      canvas.width = 1;
+      canvas.height = 1;
+      return canvas;
+    }
 
     // Normalize size: If too small (<240), upscale; if too huge (>1200), downscale
     const minDim = Math.min(w, h);

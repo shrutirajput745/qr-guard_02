@@ -291,6 +291,15 @@ function runIntegrityTests() {
   const rInvalid = QRIntegrityEngine.analyzeImage({ data: new Uint8ClampedArray(16), width: 2, height: 2 });
   assert(rInvalid.decodable === false && rInvalid.overallStatus === 'UNKNOWN', 'Malformed undersized buffer handled safely as UNKNOWN');
 
+  const rTruncated = QRIntegrityEngine.analyzeImage({ data: new Uint8ClampedArray(100), width: 100, height: 100 });
+  assert(rTruncated.decodable === false && rTruncated.overallStatus === 'UNKNOWN', 'Truncated RGBA pixel buffer rejected cleanly as UNKNOWN');
+
+  const rNaNDims = QRIntegrityEngine.analyzeImage({ data: new Uint8ClampedArray(400), width: NaN, height: 10 });
+  assert(rNaNDims.decodable === false && rNaNDims.overallStatus === 'UNKNOWN', 'NaN image dimensions rejected cleanly as UNKNOWN');
+
+  const compUndecodable = QRIntegrityEngine.compareQRs(cleanA, blankImg);
+  assert(compUndecodable.comparable === false && compUndecodable.verdict === 'INSUFFICIENT_EVIDENCE', 'Comparing valid QR against blank image returns INSUFFICIENT_EVIDENCE');
+
   // ── 13. Reproducible Synthetic Benchmark (Precision, Recall, FPR, F1) ──
   console.log('\n▶ Running Reproducible Synthetic Tampering / Damage Benchmark (20 Cases)...');
 
@@ -378,10 +387,11 @@ function runIntegrityTests() {
   const precision = (tp + fp) > 0 ? tp / (tp + fp) : 0;
   const recall = (tp + fn) > 0 ? tp / (tp + fn) : 0;
   const fpr = (fp + tn) > 0 ? fp / (fp + tn) : 0;
+  const fnr = (fn + tp) > 0 ? fn / (fn + tp) : 0;
   const f1 = (precision + recall) > 0 ? (2 * precision * recall) / (precision + recall) : 0;
 
   console.log(`  Benchmark Matrix: TP=${tp}, FP=${fp}, TN=${tn}, FN=${fn}`);
-  console.log(`  Precision=${(precision * 100).toFixed(1)}%, Recall=${(recall * 100).toFixed(1)}%, FPR=${(fpr * 100).toFixed(1)}%, F1=${(f1 * 100).toFixed(1)}%`);
+  console.log(`  Precision=${(precision * 100).toFixed(1)}%, Recall=${(recall * 100).toFixed(1)}%, FPR=${(fpr * 100).toFixed(1)}%, FNR=${(fnr * 100).toFixed(1)}%, F1=${(f1 * 100).toFixed(1)}%`);
 
   assert(precision >= 0.85, `Benchmark precision >= 85% (measured ${(precision * 100).toFixed(1)}%)`);
   assert(recall >= 0.80, `Benchmark recall >= 80% (measured ${(recall * 100).toFixed(1)}%)`);

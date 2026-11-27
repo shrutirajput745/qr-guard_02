@@ -66,9 +66,9 @@ window.QRArchitecture = (function() {
       icon: 'fa-calculator',
       accentColor: 'var(--danger-color)',
       shortSummary: 'Accumulates weighted penalty points from 0 to 100 based on detected threats.',
-      technicalDetails: 'Starting from a baseline score of 0, the engine adds pre-calibrated weights for each violation: Plain HTTP (+20), Raw IP Host (+40), Phishing Keywords (+25), Shortener (+15), @ Redirection (+45), Excessive subdomains (+15). The accumulated points are clamped between 0 (clean) and 100 (critical risk).',
+      technicalDetails: 'Starting from a baseline score of 0, the engine adds calibrated weights for each violation: Plain HTTP (+20), Raw IP Host (+35), Credential/Phishing Keywords (+30), Shortener (+15), @ Redirection (+40), Excessive Subdomains (+25), Brand/Homograph Spoofing (+30–40). The accumulated score is clamped between 0 (clean) and 100 (critical risk).',
       workingFlow: 'Flagged Rule Indicators ➔ Weighted Score Accumulator ➔ Clamped Total Score (0 - 100)',
-      example: 'Calculation: HTTP (+20) + Raw IP (+40) + Phishing Keyword (+25) = 85 / 100 Risk Score.',
+      example: 'Calculation: HTTP (+20) + Raw IP (+35) + Credential Keywords (+30) = 85 / 100 Risk Score.',
       keyPoints: [
         'Transparent, deterministic math with zero black-box obscurity',
         'Penalty weights calibrated against standard phishing tactics',
@@ -83,7 +83,7 @@ window.QRArchitecture = (function() {
       icon: 'fa-chart-pie',
       accentColor: 'var(--accent-blue)',
       shortSummary: 'Presents color-coded verdict, security breakdown, defanged preview, and action advice.',
-      technicalDetails: 'The score is categorized into three explicit tiers: Safe (0–25, Green), Suspicious (26–69, Yellow), and Dangerous (70–100, Red). The interface renders a color badge, dynamic risk meter, full breakdown list explaining each penalty, defanged link preview (to prevent accidental navigation), and logs the record to private browser localStorage.',
+      technicalDetails: 'The score is categorized into three explicit tiers: Safe (0–29, Green), Suspicious (30–69, Yellow), and Dangerous (70–100, Red). The interface renders a color badge, dynamic risk meter, full breakdown list explaining each penalty, defanged link preview (to prevent accidental navigation), and logs the record to private browser localStorage.',
       workingFlow: 'Risk Score ➔ Threshold Categorizer ➔ Visual Result Badge + Defanged Link + Local Scan History',
       example: 'The UI displays a Red "DANGEROUS" banner, explains the 3 reasons, and advises the user NOT to proceed.',
       keyPoints: [

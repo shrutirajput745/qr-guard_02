@@ -318,13 +318,27 @@
       .replace(/vv/g, 'w');
   }
 
+  function stripAsciiControls(str) {
+    return typeof str === 'string' ? str.replace(/[\u0000-\u001f\u007f]+/g, '') : '';
+  }
+
+  function hasPunycodeLabel(host) {
+    return Boolean(host) && String(host).split('.').some(l => l.toLowerCase().startsWith('xn--'));
+  }
+
   function looksLikeBareDomainUrl(str) {
     if (!str || typeof str !== 'string' || /\s/.test(str)) return false;
     if (/^[a-z0-9+.-]+:/i.test(str) && !/^[a-z0-9.-]+:\d+(?:\/|$)/i.test(str)) return false;
-    const hostPart = str.split('/')[0].split('?')[0].split('#')[0];
-    const hostOnly = hostPart.replace(/:\d+$/, '');
+    const beforeQuery = str.split('?')[0].split('#')[0];
+    const hostPart = beforeQuery.split('/')[0];
+    // Reject bare email addresses like user@example.com unless a path or port follows
+    if (hostPart.includes('@') && !beforeQuery.includes('/') && !/:[0-9]+$/.test(hostPart)) {
+      return false;
+    }
+    const targetHostPort = hostPart.includes('@') ? hostPart.slice(hostPart.lastIndexOf('@') + 1) : hostPart;
+    const hostOnly = targetHostPort.replace(/:\d+$/, '');
     if (!hostOnly || /[<>"'=();@]/.test(hostOnly)) return false;
-    return /^[^\s\/.<>"'=();:@]+(?:\.[^\s\/.<>"'=();:@]+)+$/.test(hostOnly) && /\.[a-z\u0080-\uffff]{2,}$/i.test(hostOnly);
+    return /^[^\s\/.<>"'=();:@]+(?:\.[^\s\/.<>"'=();:@]+)+$/.test(hostOnly) && /\.(?:[a-z\u0080-\uffff]{2,}|xn--[a-z0-9]{2,})$/i.test(hostOnly);
   }
 
   // ── 5. Universal QR Type Classifier ──────────────────────────────────────
@@ -379,10 +393,10 @@
 
     // vCard Contact
     if (/^BEGIN:VCARD/i.test(p)) {
-      const name = (p.match(/FN:(.+)/i) || [])[1] || '';
-      const tel = (p.match(/TEL[^:]*:(.+)/i) || [])[1] || '';
-      const email = (p.match(/EMAIL[^:]*:(.+)/i) || [])[1] || '';
-      const org = (p.match(/ORG:(.+)/i) || [])[1] || '';
+      const name = (p.match(/FN:([\s\S]+?)(?=[\r\n]+|\s+(?:(?:TEL|EMAIL|ORG|ADR|URL|NOTE)[:;]|END:VCARD)|$)/i) || [])[1] || '';
+      const tel = (p.match(/TEL[^:]*:([\s\S]+?)(?=[\r\n]+|\s+(?:(?:FN|EMAIL|ORG|ADR|URL|NOTE)[:;]|END:VCARD)|$)/i) || [])[1] || '';
+      const email = (p.match(/EMAIL[^:]*:([\s\S]+?)(?=[\r\n]+|\s+(?:(?:FN|TEL|ORG|ADR|URL|NOTE)[:;]|END:VCARD)|$)/i) || [])[1] || '';
+      const org = (p.match(/ORG:([\s\S]+?)(?=[\r\n]+|\s+(?:(?:FN|TEL|EMAIL|ADR|URL|NOTE)[:;]|END:VCARD)|$)/i) || [])[1] || '';
       return {
         type: 'vcard',
         label: 'Contact Card (vCard)',
@@ -446,13 +460,14 @@
       };
     }
 
-    // Dangerous / executable schemes (checked before host-based classifications)
-    if (/^(javascript:|data:|file:|vbscript:|intent:)/i.test(p)) {
+    // Dangerous / executable schemes (checked before host-based classifications; strip control chars to block bypass)
+    const normalizedSchemeInput = stripAsciiControls(p);
+    if (/^(javascript:|data:|file:|vbscript:|intent:)/i.test(normalizedSchemeInput)) {
       return {
         type: 'dangerous',
         label: 'Dangerous Executable Scheme',
         icon: 'fa-skull-crossbones',
-        parsedData: { scheme: p.split(':')[0] }
+        parsedData: { scheme: normalizedSchemeInput.split(':')[0] }
       };
     }
 
@@ -461,8 +476,8 @@
     try {
       if (/^https?:\/\//i.test(p) || /^ftp:\/\//i.test(p)) {
         candidateHost = new URL(p).hostname.toLowerCase();
-      } else {
-        candidateHost = p.split('/')[0].split(':')[0].toLowerCase();
+      } else if (looksLikeBareDomainUrl(p)) {
+        candidateHost = extractRawUrlParts(p).rawHost.toLowerCase();
       }
     } catch (e) {
       candidateHost = '';
@@ -879,9 +894,10 @@
       const isOversized = rawPayload.length > MAX_PAYLOAD_LENGTH;
       const payload = rawPayload.slice(0, MAX_PAYLOAD_LENGTH).trim();
 
-      // 2. Dangerous / executable protocol schemes
-      if (/^(javascript:|data:|file:|vbscript:|intent:)/i.test(payload)) {
-        const scheme = payload.split(':')[0].toLowerCase() + ':';
+      // 2. Dangerous / executable protocol schemes (strip control chars against java\tscript: obfuscation)
+      const normalizedPayloadScheme = stripAsciiControls(payload);
+      if (/^(javascript:|data:|file:|vbscript:|intent:)/i.test(normalizedPayloadScheme)) {
+        const scheme = normalizedPayloadScheme.split(':')[0].toLowerCase() + ':';
         result.isUrl = true;
         result.score = 100;
         result.status = 'Dangerous';
@@ -973,7 +989,7 @@
           });
           result.explanation = 'The QR code contains script or command syntax that could execute malicious instructions if processed.';
           result.advice = 'Avoid copying or executing this payload in browsers or command terminals.';
-        } else if (payload.startsWith('WIFI:')) {
+        } else if (/^WIFI:/i.test(payload)) {
           result.score = 10;
           result.status = 'Safe';
           result.metrics.pointsAssigned = 10;
@@ -985,6 +1001,20 @@
           });
           result.explanation = 'This payload configures a local Wi-Fi connection rather than linking to an external website.';
           result.advice = 'Verify that you recognize the Wi-Fi network SSID before connecting.';
+        } else if (/^upi:\/\//i.test(payload)) {
+          result.score = 10;
+          result.status = 'Safe';
+          result.metrics.protocol = 'UPI';
+          result.metrics.hostType = 'Payment Intent';
+          result.metrics.pointsAssigned = 10;
+          result.scoreBreakdown.push({ factor: 'UPI Payment Handler', points: 10 });
+          result.highlights.push({
+            category: 'Payment Intent',
+            title: 'Standard UPI Payment Payload',
+            message: 'Invokes a local UPI payment app intent rather than opening an external webpage.'
+          });
+          result.explanation = 'This UPI payload prepares a payment prompt targeting the specified VPA.';
+          result.advice = 'Always verify the payee name and transaction amount inside your UPI app before entering your PIN.';
         } else if (/^(tel:|sms:|smsto:|mailto:|geo:)/i.test(payload)) {
           result.score = 10;
           result.status = 'Safe';
@@ -1025,9 +1055,9 @@
       const fragment = parsedUrl ? parsedUrl.hash : rawParts.rawFragment;
       const port = parsedUrl ? parsedUrl.port : rawParts.rawPort;
 
-      // Punycode decoding: check both parsedUrl.hostname (may be xn--) and rawHostname
-      const punycodeHostname = hostname.includes('xn--') ? hostname : '';
-      const decodedUnicodeHost = hostname.includes('xn--')
+      // Punycode decoding: check both parsedUrl.hostname (may be xn--) and rawHostname at label boundaries
+      const punycodeHostname = hasPunycodeLabel(hostname) ? hostname : '';
+      const decodedUnicodeHost = hasPunycodeLabel(hostname)
         ? decodePunycodeHostname(hostname)
         : rawHostname;
 
@@ -1044,7 +1074,7 @@
       if (/%25[0-9a-f]{2}/i.test(fullUrl)) {
         encodedComponents.push('Double-encoded sequence (%25xx)');
       }
-      if (hostname.includes('xn--') || rawHostname.includes('xn--')) {
+      if (hasPunycodeLabel(hostname) || hasPunycodeLabel(rawHostname)) {
         encodedComponents.push(`Punycode IDN (${punycodeHostname || rawHostname})`);
       }
 
@@ -1171,8 +1201,8 @@
       // ── INDICATOR 4: Homograph Attack, Punycode & Mixed-Script Detection ───
       const homographSource = decodedUnicodeHost || rawHostname;
       const homoInfo = inspectHomographs(homographSource);
-      const isPunycode = hostname.includes('xn--') || rawHostname.includes('xn--');
-      const isExplicitPunycode = rawHostname.includes('xn--');
+      const isPunycode = hasPunycodeLabel(hostname) || hasPunycodeLabel(rawHostname);
+      const isExplicitPunycode = hasPunycodeLabel(rawHostname);
 
       if (homoInfo.hasInvisible) {
         points += 40;

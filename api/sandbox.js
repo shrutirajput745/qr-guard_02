@@ -29,7 +29,10 @@ module.exports = (req, res) => {
 
   try {
     const body = req.body && typeof req.body === 'object' ? req.body : {};
-    const rawData = body.qrData !== undefined ? body.qrData : (body.url !== undefined ? body.url : body.payload);
+    const hasQrData = Object.prototype.hasOwnProperty.call(body, 'qrData') && body.qrData !== undefined && body.qrData !== null;
+    const hasUrl = Object.prototype.hasOwnProperty.call(body, 'url') && body.url !== undefined && body.url !== null;
+    const hasPayload = Object.prototype.hasOwnProperty.call(body, 'payload') && body.payload !== undefined && body.payload !== null;
+    const rawData = hasQrData ? body.qrData : (hasUrl ? body.url : (hasPayload ? body.payload : undefined));
 
     if (rawData === undefined || rawData === null) {
       return res.status(400).json({

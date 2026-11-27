@@ -25,7 +25,9 @@ window.QRThreatIntel = (function() {
   function loadRecords() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
       return [];
     }
@@ -42,7 +44,7 @@ window.QRThreatIntel = (function() {
   function maskPayloadForStorage(result) {
     const raw = typeof result.input === 'string' ? result.input : '';
     if (result.qrType === 'wifi') return raw.replace(/(P:)[^;]*/i, '$1[MASKED]');
-    if (result.qrType === 'upi') return raw.replace(/(&am=)[^&]*/i, '$1[MASKED]');
+    if (result.qrType === 'upi') return raw.replace(/([?&]am=)[^&]*/i, '$1[MASKED]');
     if (result.qrType === 'vcard') return '[vCard contact — masked for privacy]';
     return raw.slice(0, 512);
   }

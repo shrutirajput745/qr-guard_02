@@ -1,7 +1,9 @@
 const http = require('http');
 const app = require('../server');
 const QRAnalyzer = require('../public/js/analyzer');
+const QRBehaviorSandbox = require('../public/js/behavior-sandbox');
 const analyzeServerlessHandler = require('../api/analyze');
+const sandboxServerlessHandler = require('../api/sandbox');
 const healthServerlessHandler = require('../api/health');
 
 let server;
@@ -235,7 +237,74 @@ async function runApiTests() {
       console.log('  ✖ [FAIL] POST /api/sandbox failed:', sandboxRes);
     }
 
-    console.log(`\nAPI Test Results: ${passed} Passed, ${failed} Failed out of 11 Tests\n`);
+    // Test 11: Malformed JSON body returns clean 400 JSON without stack trace leakage
+    const malformedJsonRes = await makeRequest({
+      path: '/api/analyze',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    }, '{brokenJson:');
+
+    if (
+      malformedJsonRes.statusCode === 400 &&
+      malformedJsonRes.body &&
+      malformedJsonRes.body.error === 'Invalid JSON payload.' &&
+      !JSON.stringify(malformedJsonRes.body).includes('SyntaxError')
+    ) {
+      passed++;
+      console.log('  ✔ [PASS] Malformed JSON body returns clean 400 JSON without stack trace');
+    } else {
+      failed++;
+      console.log('  ✖ [FAIL] Malformed JSON handler failed:', malformedJsonRes);
+    }
+
+    // Test 12: Unknown API route returns 404 JSON (never HTML fallback)
+    const missingApiRes = await makeRequest({ path: '/api/nonexistent-endpoint', method: 'GET' });
+    if (missingApiRes.statusCode === 404 && missingApiRes.body && missingApiRes.body.error) {
+      passed++;
+      console.log('  ✔ [PASS] Unknown /api/* route returns 404 JSON');
+    } else {
+      failed++;
+      console.log('  ✖ [FAIL] Unknown /api/* route did not return 404 JSON:', missingApiRes.statusCode);
+    }
+
+    // Test 13: Sandbox Express vs Vercel Serverless vs Engine parity & validation guards
+    const mockSbGet = createMockRes();
+    sandboxServerlessHandler({ method: 'GET' }, mockSbGet);
+    const mockSbNullFallback = createMockRes();
+    sandboxServerlessHandler({ method: 'POST', body: { qrData: null, url: 'https://example.com' } }, mockSbNullFallback);
+    const sbParityRes = await makeRequest({
+      path: '/api/sandbox',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    }, { url: 'example.com:8080/login' });
+    const directSb = QRBehaviorSandbox.simulate('example.com:8080/login');
+
+    if (
+      mockSbGet.statusCode === 405 &&
+      mockSbNullFallback.statusCode === 200 &&
+      sbParityRes.statusCode === 200 &&
+      sbParityRes.body.verdict === directSb.verdict &&
+      sbParityRes.body.handlerType === directSb.handlerType
+    ) {
+      passed++;
+      console.log('  ✔ [PASS] Sandbox API parity & serverless fallback guards verified');
+    } else {
+      failed++;
+      console.log('  ✖ [FAIL] Sandbox API parity/guards failed:', mockSbGet.statusCode, mockSbNullFallback.statusCode, sbParityRes);
+    }
+
+    // Test 14: Vercel Health Serverless Handler
+    const mockHealthRes = createMockRes();
+    healthServerlessHandler({ method: 'GET' }, mockHealthRes);
+    if (mockHealthRes.statusCode === 200 && mockHealthRes.body && mockHealthRes.body.status === 'ok') {
+      passed++;
+      console.log('  ✔ [PASS] Vercel Serverless api/health returns 200 OK');
+    } else {
+      failed++;
+      console.log('  ✖ [FAIL] Vercel Serverless api/health failed');
+    }
+
+    console.log(`\nAPI Test Results: ${passed} Passed, ${failed} Failed out of ${passed + failed} Tests\n`);
 
   } catch (err) {
     console.error('Fatal API test error:', err);

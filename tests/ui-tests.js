@@ -65,5 +65,16 @@ assert(idCounts['socShell'] === 1 && idCounts['socSidebar'] === 1 && idCounts['s
 const socCss = fs.readFileSync(path.join(publicDir, 'css', 'soc-theme.css'), 'utf8');
 assert(socCss.includes('prefers-reduced-motion'), 'soc-theme.css includes prefers-reduced-motion accessibility support');
 
+// 6. Verify security hardening across frontend files
+const targetBlankLinks = [...html.matchAll(/<a\b[^>]*target=["']_blank["'][^>]*>/gi)].map(m => m[0]);
+const unsafeTargets = targetBlankLinks.filter(tag => !/rel=["'][^"']*noopener/i.test(tag));
+assert(unsafeTargets.length === 0, 'All target="_blank" links include rel="noopener"');
+
+const historyCode = fs.readFileSync(path.join(publicDir, 'js', 'history.js'), 'utf8');
+assert(historyCode.includes('[?&]am=') && historyCode.includes('sanitizeCsvCell'), 'history.js masks ?am=/&am= and neutralizes CSV formulas');
+
+const presCode = fs.readFileSync(path.join(publicDir, 'js', 'presentation.js'), 'utf8');
+assert(!presCode.includes("e.key === 'Space'"), 'presentation.js handles standard space key (" ") rather than "Space"');
+
 console.log(`\nUI Structure Test Results: ${passed} Passed, ${failed} Failed out of ${passed + failed} Tests\n`);
 if (failed > 0) process.exit(1);

@@ -19,8 +19,8 @@ window.QRHistory = (function() {
       return input.replace(/(P:)[^;]*/i, '$1[MASKED]');
     }
     if (qrType === 'upi') {
-      // Keep payee name/address but remove amount
-      return input.replace(/(&am=)[^&]*/i, '$1[MASKED]');
+      // Keep payee name/address but remove amount (?am= or &am=)
+      return input.replace(/([?&]am=)[^&]*/i, '$1[MASKED]');
     }
     // vCard: keep name/org but mask phone and email
     if (qrType === 'vcard') {
@@ -32,7 +32,9 @@ window.QRHistory = (function() {
   function load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
       return [];
     }
@@ -72,18 +74,24 @@ window.QRHistory = (function() {
     localStorage.removeItem(STORAGE_KEY);
   }
 
+  function sanitizeCsvCell(val) {
+    const str = val === null || val === undefined ? '' : String(val);
+    const neutralized = /^[=+\-@\t\r]/.test(str) ? "'" + str : str;
+    return '"' + neutralized.replace(/"/g, '""') + '"';
+  }
+
   function exportCSV() {
     const records = load();
     if (records.length === 0) return null;
 
     const header = ['ID', 'Timestamp', 'QR Type', 'Risk Status', 'Risk Score', 'Payload (truncated)'];
     const rows = records.map(r => [
-      r.id,
-      r.timestamp,
-      r.qrTypeLabel,
-      r.status,
+      sanitizeCsvCell(r.id),
+      sanitizeCsvCell(r.timestamp),
+      sanitizeCsvCell(r.qrTypeLabel),
+      sanitizeCsvCell(r.status),
       r.score,
-      '"' + (r.payload || '').replace(/"/g, '""') + '"'
+      sanitizeCsvCell(r.payload || '')
     ].join(','));
 
     return [header.join(','), ...rows].join('\n');

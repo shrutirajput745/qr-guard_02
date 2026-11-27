@@ -347,9 +347,9 @@ document.addEventListener('DOMContentLoaded', () => {
         window.showToast('No valid web address to open.', 'warning');
         return;
       }
-      if (/^(javascript:|data:|file:|vbscript:)/i.test(currentAnalyzedUrl)) {
+      if (/^(javascript:|data:|file:|vbscript:|intent:)/i.test(currentAnalyzedUrl.replace(/[\u0000-\u001f\u007f]+/g, '')) || currentAnalyzedStatus === 'Dangerous' && !/^(https?|ftp):\/\//i.test(currentAnalyzedUrl)) {
         e.preventDefault();
-        window.showToast('Execution of script/file schemes is blocked for security.', 'error');
+        window.showToast('Execution of script/file/intent schemes is blocked for security.', 'error');
         return;
       }
       if (currentAnalyzedStatus === 'Dangerous') {
@@ -480,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const payloadType = document.getElementById('payloadType');
     if (extractedPayload) {
       extractedPayload.innerHTML = '';
-      if (result.isUrl && result.forensics && /^(https?|ftp):\/\//i.test(result.input)) {
+      if (result.isUrl && result.forensics && /^(https?|ftp):\/\//i.test(result.input) && !result.input.includes('@')) {
         const f = result.forensics;
         const addSpan = (cls, txt) => {
           if (!txt) return;
@@ -500,11 +500,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    const isExecScheme = /^(javascript:|data:|file:|vbscript:)/i.test(result.input);
+    const isExecScheme = result.qrType === 'dangerous' || /^(javascript:|data:|file:|vbscript:|intent:)/i.test(String(result.input || '').replace(/[\u0000-\u001f\u007f]+/g, ''));
     if (result.isUrl && !isExecScheme) {
       if (payloadType) payloadType.innerHTML = '<i class="fa-solid fa-link"></i> Decoded Web URL';
       if (openUrlBtn)  openUrlBtn.style.display = 'inline-flex';
-      const validUrl = /^https?:\/\//i.test(result.input) ? result.input : `http://${result.input}`;
+      const validUrl = /^(https?|ftp):\/\//i.test(result.input) ? result.input : `http://${result.input}`;
       currentAnalyzedUrl = validUrl;
       if (openUrlBtn) openUrlBtn.href = validUrl;
       if (result.status === 'Dangerous') {

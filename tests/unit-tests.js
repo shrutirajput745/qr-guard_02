@@ -152,6 +152,30 @@ const testCases = [
   { name: 'Oversized URL payload safely clamped at score 100',
     input: 'http://free-reward-claim.top/login?' + 'a='.repeat(2500),
     expectStatus: 'Dangerous', expectScore: 100 },
+
+  // ── 11. Audit Regression Fixes ────────────────────────────────────────
+  { name: 'Regression: Control char bypass in javascript: scheme blocked',
+    input: 'java\tscript:alert(1)',
+    expectStatus: 'Dangerous', expectScore: 100, expectQrType: 'dangerous' },
+  { name: 'Regression: Case-insensitive wifi: scheme handled consistently',
+    input: 'wifi:S:HomeNet;T:WPA;P:Secret123;;',
+    expectStatus: 'Safe', expectScore: 10, expectQrType: 'wifi', isUrl: false },
+  { name: 'Regression: UPI payload gets dedicated payment analysis (not Plain Text)',
+    input: 'upi://pay?am=500&pa=merchant@upi&pn=Store',
+    expectStatus: 'Safe', expectScore: 10, expectQrType: 'upi', isUrl: false },
+  { name: 'Regression: Bare domain @ redirection caught (not dropped as plain text)',
+    input: 'paypal.com@evil.com/login',
+    expectStatus: 'Dangerous', minScore: 70, isUrl: true },
+  { name: 'Regression: Bare email address stays Plain Text (no false @ redirection)',
+    input: 'support@example.com',
+    expectStatus: 'Safe', expectScore: 0, expectQrType: 'text', isUrl: false },
+  { name: 'Regression: Substring "xn--" inside non-ACE label does not trigger Punycode',
+    input: 'https://prefixn--bar.com/docs',
+    expectStatus: 'Safe', expectScore: 0 },
+  { name: 'Regression: Non-string numeric input safely rejected',
+    input: 12345,
+    expectStatus: 'Dangerous', expectScore: 100 },
+
   { name: 'URL Structure Forensics decomposition accuracy',
     input: 'https://sub1.sub2.example.co.uk:8443/users/verify?redirect=https%3A%2F%2Fdest.org#top',
     minScore: 30,
@@ -239,6 +263,66 @@ testCases.forEach((tc) => {
 });
 
 console.log(`\nUnit Test Results: ${passed} Passed, ${failed} Failed out of ${testCases.length} Tests\n`);
+
+// ── 12. Legitimate vs Adversarial URL Detection Benchmark ────────────────
+console.log('▶ Running Legitimate vs Adversarial Quishing Benchmark (24 Cases)...');
+const detectionBenchmark = [
+  // 12 Legitimate URLs (expectedFlagged = false -> status Safe)
+  { name: 'Legit-01 Wikipedia', url: 'https://en.wikipedia.org/wiki/QR_code', expectedFlagged: false },
+  { name: 'Legit-02 GitHub Repo', url: 'https://github.com/shrutirajput745/qr-guard_02', expectedFlagged: false },
+  { name: 'Legit-03 Google Account Signin', url: 'https://accounts.google.com/signin', expectedFlagged: false },
+  { name: 'Legit-04 Microsoft Login', url: 'https://login.microsoft.com', expectedFlagged: false },
+  { name: 'Legit-05 PayPal Official', url: 'https://www.paypal.com/myaccount/summary', expectedFlagged: false },
+  { name: 'Legit-06 Apple Support', url: 'https://apps.apple.com/us/app/test/id12345', expectedFlagged: false },
+  { name: 'Legit-07 Author Bio Path', url: 'https://example.com/author/profile', expectedFlagged: false },
+  { name: 'Legit-08 Wikipedia Reset Page', url: 'https://en.wikipedia.org/wiki/Reset', expectedFlagged: false },
+  { name: 'Legit-09 Reddit Homepage', url: 'https://reddit.com/r/netsec', expectedFlagged: false },
+  { name: 'Legit-10 Pinterest', url: 'https://pinterest.com', expectedFlagged: false },
+  { name: 'Legit-11 Plain HTTP News Site', url: 'http://example.com/articles/today', expectedFlagged: false },
+  { name: 'Legit-12 Safe Subdomain Docs', url: 'https://docs.github.com/en/get-started', expectedFlagged: false },
+
+  // 12 Adversarial / Quishing URLs (expectedFlagged = true -> Suspicious or Dangerous)
+  { name: 'Adv-01 Cyrillic PayPal Homograph', url: 'https://p\u0430ypal.com/login', expectedFlagged: true },
+  { name: 'Adv-02 Zero-Width Spoof', url: 'https://pay\u200Bpal.com/signin', expectedFlagged: true },
+  { name: 'Adv-03 Punycode Apple Spoof', url: 'https://xn--80ak6aa92e.com/signin', expectedFlagged: true },
+  { name: 'Adv-04 Lookalike paypa1.com', url: 'https://paypa1.com/verify', expectedFlagged: true },
+  { name: 'Adv-05 Transposition payapl.com', url: 'https://payapl.com', expectedFlagged: true },
+  { name: 'Adv-06 Raw IP Credential Harvest', url: 'http://192.168.1.55/login.php', expectedFlagged: true },
+  { name: 'Adv-07 Scam Bait on .TOP', url: 'http://free-reward-claim.top/login', expectedFlagged: true },
+  { name: 'Adv-08 Brand Subdomain Phishing', url: 'https://paypal.com.account-verify.xyz/login', expectedFlagged: true },
+  { name: 'Adv-09 At-Symbol Redirection', url: 'https://google.com@evil-login.top/auth', expectedFlagged: true },
+  { name: 'Adv-10 Bare At-Redirection', url: 'paypal.com@evil.com/login', expectedFlagged: true },
+  { name: 'Adv-11 Executable JS Scheme', url: 'javascript:alert(1)', expectedFlagged: true },
+  { name: 'Adv-12 Executable Redirect Param', url: 'https://portal-check.org/go?next=javascript%3Aalert(1)', expectedFlagged: true }
+];
+
+let tp = 0, fp = 0, tn = 0, fn = 0;
+detectionBenchmark.forEach(item => {
+  const r = QRAnalyzer.analyze(item.url);
+  const flagged = r.status === 'Suspicious' || r.status === 'Dangerous';
+  if (item.expectedFlagged && flagged) tp++;
+  else if (!item.expectedFlagged && flagged) fp++;
+  else if (!item.expectedFlagged && !flagged) tn++;
+  else fn++;
+  if (flagged !== item.expectedFlagged) {
+    console.log(`  ! [BENCHMARK MISS] ${item.name}: expectedFlagged=${item.expectedFlagged}, got ${r.status} (${r.score})`);
+  }
+});
+
+const precision = (tp + fp) > 0 ? tp / (tp + fp) : 0;
+const recall = (tp + fn) > 0 ? tp / (tp + fn) : 0;
+const fpr = (fp + tn) > 0 ? fp / (fp + tn) : 0;
+const fnr = (fn + tp) > 0 ? fn / (fn + tp) : 0;
+const f1 = (precision + recall) > 0 ? (2 * precision * recall) / (precision + recall) : 0;
+console.log(`  URL Detection Matrix: TP=${tp}, FP=${fp}, TN=${tn}, FN=${fn}`);
+console.log(`  Precision=${(precision * 100).toFixed(1)}%, Recall=${(recall * 100).toFixed(1)}%, FPR=${(fpr * 100).toFixed(1)}%, FNR=${(fnr * 100).toFixed(1)}%, F1=${(f1 * 100).toFixed(1)}%`);
+
+if (precision < 0.90 || recall < 0.90 || fpr > 0.10 || fnr > 0.10) {
+  console.error('  ✖ [FAIL] URL detection benchmark fell below threshold!');
+  failed++;
+} else {
+  console.log('  ✔ [PASS] URL detection benchmark meets Precision/Recall >= 90% and FPR/FNR <= 10%');
+}
 
 if (failed > 0) {
   console.log('Failed test cases:');
