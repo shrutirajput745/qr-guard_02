@@ -443,3 +443,25 @@
   color: var(--text-muted);
 }
 
+.il-dual-canvas-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+.history-filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.history-filter-bar .ti-search-input {
+  max-width: 340px;
+}
+@media (max-width: 540px) {
+  .il-dual-canvas-row { grid-template-columns: 1fr; }
+  .history-filter-bar .ti-search-input { max-width: 100%; }
+}
+

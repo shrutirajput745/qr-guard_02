@@ -7,6 +7,8 @@
 window.QRHistory = (function() {
   const STORAGE_KEY = localStorage.getItem('qrguard_history') ? 'qrguard_history' : (localStorage.getItem('qrguard2_history') ? 'qrguard2_history' : 'qrguard_history');
   const MAX_HISTORY = 50; // cap to avoid localStorage overflow
+  let activeFilter = 'all';
+  let activeSearch = '';
 
   // QR types whose raw content should be partially masked in history
   const SENSITIVE_TYPES = ['wifi', 'upi', 'vcard'];
@@ -119,14 +121,22 @@ window.QRHistory = (function() {
     if (!container) return;
 
     const records = load();
+    const filtered = records.filter(r => {
+      if (activeFilter !== 'all' && (r.status || '').toLowerCase() !== activeFilter) return false;
+      if (activeSearch) {
+        const hay = `${r.payload || ''} ${r.qrTypeLabel || ''} ${r.status || ''}`.toLowerCase();
+        if (!hay.includes(activeSearch)) return false;
+      }
+      return true;
+    });
 
     if (countEl) {
       countEl.textContent = records.length === 0
         ? 'No scans yet'
-        : `${records.length} scan${records.length !== 1 ? 's' : ''} recorded`;
+        : `${filtered.length} of ${records.length} scan${records.length !== 1 ? 's' : ''} shown`;
     }
 
-    if (records.length === 0) {
+    if (filtered.length === 0) {
       container.innerHTML = '';
       if (emptyMsg) emptyMsg.style.display = 'flex';
       return;
@@ -134,7 +144,7 @@ window.QRHistory = (function() {
 
     if (emptyMsg) emptyMsg.style.display = 'none';
 
-    container.innerHTML = records.map(r => `
+    container.innerHTML = filtered.map(r => `
       <div class="history-item history-${getStatusClass(r.status)}">
         <div class="history-item-icon">
           <i class="fa-solid ${getStatusIcon(r.status)}"></i>
@@ -167,8 +177,27 @@ window.QRHistory = (function() {
       .replace(/'/g, '&#039;');
   }
 
+  function init() {
+    document.querySelectorAll('.history-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.history-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.getAttribute('data-history-filter') || 'all';
+        renderHistory();
+      });
+    });
+    const searchEl = document.getElementById('historySearchInput');
+    if (searchEl) {
+      searchEl.addEventListener('input', (e) => {
+        activeSearch = (e.target.value || '').trim().toLowerCase();
+        renderHistory();
+      });
+    }
+  }
+
   // ─── Public API ───────────────────────────────────────────────────────────
   return {
+    init,
     addEntry,
     clearAll,
     load,

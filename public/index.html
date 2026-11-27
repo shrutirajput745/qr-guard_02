@@ -868,17 +868,24 @@
           </div>
 
           <div class="card il-panel">
-            <h3><i class="fa-solid fa-fire"></i> Visual Anomaly Heatmap</h3>
-            <div class="il-heatmap-box">
-              <canvas id="ilSingleHeatmapCanvas" width="240" height="240" class="il-heatmap-canvas"></canvas>
-              <div class="il-heatmap-legend">
-                <span><i class="legend-dot same"></i> Normal</span>
-                <span><i class="legend-dot blur"></i> Low Contrast</span>
-                <span><i class="legend-dot data-diff"></i> Overlay / Patch</span>
-                <span><i class="legend-dot fn-diff"></i> Structural Error</span>
+            <h3><i class="fa-solid fa-fire"></i> QR Module Matrix &amp; Visual Anomaly Heatmap</h3>
+            <div class="il-dual-canvas-row">
+              <div class="il-heatmap-box">
+                <span class="ti-sub-label">Normalized Module Matrix</span>
+                <canvas id="ilModuleMatrixCanvas" width="180" height="180" class="il-heatmap-canvas"></canvas>
               </div>
-              <p id="ilHeatmapNote" class="il-muted"></p>
+              <div class="il-heatmap-box">
+                <span class="ti-sub-label">Anomaly Heatmap</span>
+                <canvas id="ilSingleHeatmapCanvas" width="180" height="180" class="il-heatmap-canvas"></canvas>
+              </div>
             </div>
+            <div class="il-heatmap-legend" style="margin-top:10px;">
+              <span><i class="legend-dot same"></i> Normal</span>
+              <span><i class="legend-dot blur"></i> Low Contrast</span>
+              <span><i class="legend-dot data-diff"></i> Overlay / Patch</span>
+              <span><i class="legend-dot fn-diff"></i> Structural Error</span>
+            </div>
+            <p id="ilHeatmapNote" class="il-muted" style="text-align:center; margin-top:6px;"></p>
           </div>
         </div>
 
@@ -924,6 +931,8 @@
             <button type="button" class="ti-preset-btn sb-preset-btn" data-payload="intent://pay/confirm#Intent;scheme=https;package=com.unknown.wallet;S.browser_fallback_url=https%3A%2F%2Fevil.top;end">Android Intent Hijack</button>
             <button type="button" class="ti-preset-btn sb-preset-btn" data-payload="upi://pay?pa=merchant@upi&pn=DemoShop&am=499&cu=INR">UPI Payment Prompt</button>
             <button type="button" class="ti-preset-btn sb-preset-btn" data-payload="WIFI:S:FreeAirportWiFi;T:nopass;P:;;">Open Wi-Fi Auto-Join</button>
+            <button type="button" class="ti-preset-btn sb-preset-btn" data-payload="sms:+14155550199:Confirm%20OTP%20code">SMS Intent</button>
+            <button type="button" class="ti-preset-btn sb-preset-btn" data-payload="mailto:security@example.com?subject=Verification&body=Confirm">Email Intent</button>
             <button type="button" class="ti-preset-btn sb-preset-btn" data-payload="https://wikipedia.org">Clean HTTPS Site</button>
           </div>
         </div>
@@ -1224,6 +1233,16 @@
       <div class="history-privacy-note">
         <i class="fa-solid fa-lock"></i>
         <span>History is stored locally in your browser only. Wi-Fi passwords, UPI amounts, and contact details are masked before storage.</span>
+      </div>
+
+      <div class="history-filter-bar">
+        <div class="ti-filter-group">
+          <button type="button" class="ti-filter-btn history-filter-btn active" data-history-filter="all">All</button>
+          <button type="button" class="ti-filter-btn history-filter-btn" data-history-filter="safe">Safe</button>
+          <button type="button" class="ti-filter-btn history-filter-btn" data-history-filter="suspicious">Suspicious</button>
+          <button type="button" class="ti-filter-btn history-filter-btn" data-history-filter="dangerous">Dangerous</button>
+        </div>
+        <input type="text" id="historySearchInput" class="ti-search-input" placeholder="Filter scan history by payload or QR type…" aria-label="Filter Scan History">
       </div>
 
       <div id="historyEmpty" class="history-empty" style="display:flex;">

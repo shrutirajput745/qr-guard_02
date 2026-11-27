@@ -197,6 +197,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.QRSandboxUI.init();
   }
 
+  if (window.QRHistory && window.QRHistory.init) {
+    window.QRHistory.init();
+  }
+
   // ── SOC Shell Controls: Sidebar, Mobile Drawer, Status Strip & Settings ──
   const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
   if (sidebarToggleBtn && socShell) {

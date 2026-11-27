@@ -137,6 +137,7 @@
     const recommendations = [];
     let staticRedirectHops = [];
     let downloadRisk = null;
+    let previewData = null;
     let handlerType = 'Plain Text Viewer';
     let verdict = 'SAFE_CONTAINED';
     let verdictLabel = 'Safe & Contained';
@@ -191,6 +192,7 @@
     // 3. Android Intent URI
     else if (lower.startsWith('intent://')) {
       const intentInfo = parseAndroidIntent(payload);
+      previewData = { kind: 'intent', ...intentInfo };
       handlerType = 'Android Intent Dispatcher';
       verdict = 'HIGH_RISK_BEHAVIOR';
       verdictLabel = 'High-Risk App Intent';
@@ -336,6 +338,7 @@
         cu = u.searchParams.get('cu') || cu;
       } catch (e) { /* ignore */ }
       permissionsRequested.push('Payment App Invocation', 'Financial Transaction Authorization');
+      previewData = { kind: 'upi', payeeAddress: pa, payeeName: pn, amount: am, currency: cu };
       timeline.push({
         stage: 2,
         title: 'Payment App Dispatch',
@@ -357,6 +360,8 @@
       riskLevel = weakSec ? 'HIGH' : 'MEDIUM';
 
       permissionsRequested.push('Wi-Fi Interface Reconfiguration', 'Local Network Traffic Routing');
+      const isHidden = /H:true/i.test(payload);
+      previewData = { kind: 'wifi', ssid, security: sec, hidden: isHidden, password: '●●●●●●●● (masked)' };
       timeline.push({
         stage: 2,
         title: 'OS Wi-Fi Provisioning',
@@ -376,6 +381,24 @@
       verdictLabel = 'Device Action Prompt';
       riskLevel = 'LOW';
       permissionsRequested.push(`OS ${prefix} App Launch`);
+      if (/^(sms:|smsto:)/i.test(payload)) {
+        const rawSms = payload.replace(/^(sms:|smsto:)/i, '');
+        const [num, ...msgParts] = rawSms.split(':');
+        previewData = { kind: 'sms', recipient: num.trim(), message: safeDecode(msgParts.join(':').trim() || '(none)') };
+      } else if (/^mailto:/i.test(payload)) {
+        let to = '', subject = '', body = '';
+        try {
+          const u = new URL(payload);
+          to = u.pathname;
+          subject = u.searchParams.get('subject') || '';
+          body = u.searchParams.get('body') || '';
+        } catch (e) {
+          to = payload.replace(/^mailto:/i, '').split('?')[0];
+        }
+        previewData = { kind: 'email', to, subject: subject || '(none)', body: body || '(none)' };
+      } else if (/^tel:/i.test(payload)) {
+        previewData = { kind: 'phone', number: payload.replace(/^tel:/i, '') };
+      }
       timeline.push({
         stage: 2,
         title: 'Local Device Intent',
@@ -413,6 +436,7 @@
       permissionsRequested,
       staticRedirectHops,
       downloadRisk,
+      previewData,
       sideEffects,
       recommendations,
       sandboxNotice: 'Offline deterministic simulation only. No external URLs were fetched and no code was executed.'

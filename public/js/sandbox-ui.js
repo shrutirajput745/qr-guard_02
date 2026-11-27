@@ -69,6 +69,24 @@ window.QRSandboxUI = (function() {
         <strong>${escapeHtml(step.title)}</strong>
       </div>`).join('');
 
+    let previewHtml = '';
+    if (sim.previewData) {
+      const entries = Object.entries(sim.previewData).filter(([k]) => k !== 'kind');
+      const cells = entries.map(([k, v]) => `
+        <div class="ti-forensic-cell">
+          <span>${escapeHtml(k.replace(/([A-Z])/g, ' $1'))}</span>
+          <code>${escapeHtml(String(v || 'None'))}</code>
+        </div>`).join('');
+      previewHtml = `
+        <div class="card ti-panel-card" style="margin-bottom:18px;">
+          <div class="ti-panel-header">
+            <h3><i class="fa-solid fa-eye"></i> Simulated ${escapeHtml(sim.previewData.kind.toUpperCase())} Action Preview</h3>
+            <span class="ti-panel-badge">Not Executed</span>
+          </div>
+          <div class="ti-forensics-grid">${cells}</div>
+        </div>`;
+    }
+
     outEl.innerHTML = `
       <div class="il-status-banner il-status-${cls}" style="margin-bottom:18px;">
         <div class="il-status-left">
@@ -92,6 +110,8 @@ window.QRSandboxUI = (function() {
       </div>
 
       <div class="sb-chain-wrap" aria-label="Hypothetical Execution Chain">${chainHtml}</div>
+
+      ${previewHtml}
 
       <div class="ti-report-payload" style="margin-bottom:18px;">
         <span class="ti-sub-label">Simulated Payload (Inert — Zero Network / Zero Script Execution)</span>

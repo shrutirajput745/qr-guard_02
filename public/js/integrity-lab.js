@@ -355,11 +355,34 @@ window.QRIntegrityLab = (function() {
   }
 
   function drawSingleAnomalyHeatmap(report) {
+    const matrixCanvas = document.getElementById('ilModuleMatrixCanvas');
     const canvas = document.getElementById('ilSingleHeatmapCanvas');
     const noteEl = document.getElementById('ilHeatmapNote');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (matrixCanvas) {
+      const mCtx = matrixCanvas.getContext('2d');
+      mCtx.clearRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+      if (!report.matrix || !report.heatmap) {
+        mCtx.fillStyle = '#0f172a';
+        mCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+        mCtx.fillStyle = '#94a3b8';
+        mCtx.font = '11px sans-serif';
+        mCtx.textAlign = 'center';
+        mCtx.fillText('Matrix unavailable', matrixCanvas.width / 2, matrixCanvas.height / 2);
+      } else {
+        const dim = report.heatmap.dimension;
+        const mCell = matrixCanvas.width / dim;
+        for (let r = 0; r < dim; r++) {
+          for (let c = 0; c < dim; c++) {
+            mCtx.fillStyle = report.matrix[r * dim + c] ? '#0f172a' : '#f8fafc';
+            mCtx.fillRect(c * mCell, r * mCell, Math.ceil(mCell), Math.ceil(mCell));
+          }
+        }
+      }
+    }
 
     if (!report.heatmap || !report.matrix) {
       ctx.fillStyle = '#0f172a';

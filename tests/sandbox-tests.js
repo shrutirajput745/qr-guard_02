@@ -49,12 +49,18 @@ assert(sDirectApk.downloadRisk && sDirectApk.downloadRisk.level === 'HIGH' && sD
 const sExecRedir = QRBehaviorSandbox.simulate('https://portal-check.org/go?next=javascript%3Aalert(1)');
 assert(sExecRedir.verdict === 'HIGH_RISK_BEHAVIOR' && sExecRedir.staticRedirectHops[0].isExecutableTarget === true, 'Executable redirect target flagged');
 
-// 8. UPI & Wi-Fi & Plain Text
+// 8. UPI & Wi-Fi & SMS & Email & Plain Text
 const sUpi = QRBehaviorSandbox.simulate('upi://pay?pa=merchant@upi&pn=DemoShop&am=499&cu=INR');
-assert(sUpi.verdict === 'CAUTION_INTERACTIVE_ACTION' && sUpi.handlerType.includes('UPI'), 'UPI payment intent modeled cleanly');
+assert(sUpi.verdict === 'CAUTION_INTERACTIVE_ACTION' && sUpi.handlerType.includes('UPI') && sUpi.previewData && sUpi.previewData.payeeAddress === 'merchant@upi', 'UPI payment intent modeled cleanly with previewData');
 
 const sOpenWifi = QRBehaviorSandbox.simulate('WIFI:S:FreeAirportWiFi;T:nopass;P:;;');
-assert(sOpenWifi.verdict === 'HIGH_RISK_BEHAVIOR', 'Open/nopass Wi-Fi flagged as HIGH_RISK_BEHAVIOR');
+assert(sOpenWifi.verdict === 'HIGH_RISK_BEHAVIOR' && sOpenWifi.previewData && sOpenWifi.previewData.ssid === 'FreeAirportWiFi', 'Open/nopass Wi-Fi flagged as HIGH_RISK_BEHAVIOR with previewData');
+
+const sSms = QRBehaviorSandbox.simulate('sms:+14155550199:Confirm%20OTP');
+assert(sSms.verdict === 'CAUTION_INTERACTIVE_ACTION' && sSms.previewData && sSms.previewData.kind === 'sms' && sSms.previewData.message === 'Confirm OTP', 'SMS intent modeled with decoded previewData');
+
+const sMail = QRBehaviorSandbox.simulate('mailto:security@example.com?subject=Verify&body=Hello');
+assert(sMail.verdict === 'CAUTION_INTERACTIVE_ACTION' && sMail.previewData && sMail.previewData.kind === 'email' && sMail.previewData.to === 'security@example.com', 'Email intent modeled with previewData');
 
 const sWpaWifi = QRBehaviorSandbox.simulate('WIFI:S:CampusWiFi;T:WPA;P:Secured123;;');
 assert(sWpaWifi.verdict === 'CAUTION_INTERACTIVE_ACTION', 'WPA Wi-Fi modeled as CAUTION_INTERACTIVE_ACTION');
